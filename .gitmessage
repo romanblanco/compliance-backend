@@ -1,0 +1,32 @@
+# <type>(scope): RHICOMPL-1234 <description>
+#
+#  - Use <type>(scope)! if commit introduces breaking change
+#  - Type of commit and 50 character subject line:
+#
+#  * feat: A new feature
+#  * fix: Patch for a bug in your codebase
+#  * docs: Documentation only changes
+#  * remove: A code change that removes files or old, unnecessary cod
+#  * perf: A code change that improves performance
+#  * refactor: A code change that neither fixes a bug nor adds a feature
+#  * test: Adding missing tests or correcting existing tests
+#  * style: Changes that do not affect the meaning of the code
+#           (white-space, formatting, missing semi-colons, etc)
+#  * build: Changes that affect the build system or external dependencies
+#           (example scopes: gulp, broccoli, npm)
+#  * ci: Changes to our CI configuration files and scripts
+#        (example scopes: Travis, Circle, BrowserStack, SauceLabs)
+#  * chore:
+#  * devel:
+#
+# [optional body]
+#
+#  - 72-character wrapped longer description. This should answer:
+#
+#  * Why was this change necessary?
+#  * How does it address the problem?
+#  * Are there any side effects?
+#
+# [optional footer(s)]
+#
+#  * BREAKING CHANGE: <description>
