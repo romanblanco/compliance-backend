@@ -50,7 +50,8 @@ module Api
               example: 'APAC Expansion',
               nullable: true
             },
-            canonical: {
+            canonical: { # canonical option seems to be removed after running
+              # swaggerize. spec/integration/profiles_spec.rb refers to the profile via #428: attributes: ref_schema('profile')
               type: 'boolean',
               example: true
             },

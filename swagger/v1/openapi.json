@@ -127,35 +127,36 @@
                     },
                     "relationships": {
                       "rules": {
-                        "data": [
-                          {
-                            "id": "aa67c98c-d81f-5a9c-b0bc-26caa0051aea",
-                            "type": "rule"
-                          },
-                          {
-                            "id": "37f7eeff-831b-5c41-984a-254965f58c0f",
-                            "type": "rule"
-                          }
-                        ]
+                        "data": []
                       },
                       "profiles": {
-                        "data": [
-                          {
-                            "id": "aa67c98c-d81f-5a9c-b0bc-26caa0051aea",
-                            "type": "profile"
-                          },
-                          {
-                            "id": "37f7eeff-831b-5c41-984a-254965f58c0f",
-                            "type": "profile"
-                          }
-                        ]
+                        "data": []
+                      }
+                    }
+                  },
+                  {
+                    "id": "3132e0f5-9d9b-431b-811f-eda69f20293f",
+                    "type": "benchmark",
+                    "attributes": {
+                      "ref_id": "xccdf_org.ssgproject.content_benchmark_RHEL-7",
+                      "title": "Enim neque sit cum.",
+                      "version": "100.0.1",
+                      "description": "Commodi repudiandae aut. Odit ratione animi. Nihil itaque quibusdam.",
+                      "os_major_version": "7",
+                      "latest_supported_os_minor_versions": []
+                    },
+                    "relationships": {
+                      "rules": {
+                        "data": []
+                      },
+                      "profiles": {
+                        "data": []
                       }
                     }
                   }
                 ],
                 "meta": {
-                  "total": 1,
-                  "search": null,
+                  "total": 2,
                   "limit": 10,
                   "offset": 1,
                   "relationships": true
@@ -480,7 +481,6 @@
                 ],
                 "meta": {
                   "total": 2,
-                  "search": null,
                   "limit": 10,
                   "offset": 1,
                   "sort_by": "title",
@@ -753,69 +753,9 @@
                       "external": false,
                       "compliance_threshold": 100.0,
                       "os_major_version": "7",
-                      "os_minor_version": "",
                       "os_version": "7",
                       "policy_profile_id": null,
-                      "parent_profile_ref_id": null,
-                      "name": "profile1",
-                      "description": "foo",
-                      "canonical": true,
-                      "tailored": false,
-                      "total_host_count": 1,
-                      "ssg_version": "0.1.45",
-                      "compliant_host_count": 0,
-                      "test_result_host_count": 1,
-                      "unsupported_host_count": 0,
-                      "business_objective": null,
-                      "policy_type": "profile1"
-                    },
-                    "relationships": {
-                      "account": {
-                        "data": null
-                      },
-                      "benchmark": {
-                        "data": {
-                          "id": "aa67c98c-d81f-5a9c-b0bc-26caa0051aea",
-                          "type": "benchmark"
-                        }
-                      },
-                      "parent_profile": {
-                        "data": null
-                      },
-                      "rules": {
-                        "data": []
-                      },
-                      "hosts": {
-                        "data": [
-                          {
-                            "id": "5e65ac3f-8b44-4f60-9e99-abdafb31740c",
-                            "type": "host"
-                          }
-                        ]
-                      },
-                      "test_results": {
-                        "data": [
-                          {
-                            "id": "aa67c98c-d81f-5a9c-b0bc-26caa0051aea",
-                            "type": "test_result"
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  {
-                    "id": "37f7eeff-831b-5c41-984a-254965f58c0f",
-                    "type": "profile",
-                    "attributes": {
-                      "ref_id": "xccdf_org.ssgproject.profile2",
-                      "score": 98.0,
-                      "parent_profile_id": null,
-                      "external": false,
-                      "compliance_threshold": 100.0,
-                      "os_major_version": "7",
                       "os_minor_version": "",
-                      "os_version": "7",
-                      "policy_profile_id": null,
                       "parent_profile_ref_id": null,
                       "name": "Est ducimus fugit iure.",
                       "description": "Non numquam adipisci. Inventore totam ab. Reprehenderit sapiente praesentium.",
@@ -846,20 +786,10 @@
                         "data": []
                       },
                       "hosts": {
-                        "data": [
-                          {
-                            "id": "328fb4c0-42fc-0139-06c0-6e70056f34f5",
-                            "type": "host"
-                          }
-                        ]
+                        "data": []
                       },
                       "test_results": {
-                        "data": [
-                          {
-                            "id": "37f7eeff-831b-5c41-984a-254965f58c0f",
-                            "type": "test_result"
-                          }
-                        ]
+                        "data": []
                       }
                     }
                   }
@@ -982,16 +912,7 @@
                       }
                     },
                     "rules": {
-                      "data": [
-                        {
-                          "id": "aa67c98c-d81f-5a9c-b0bc-26caa0051aea",
-                          "type": "rule"
-                        },
-                        {
-                          "id": "37f7eeff-831b-5c41-984a-254965f58c0f",
-                          "type": "rule"
-                        }
-                      ]
+                      "data": []
                     },
                     "hosts": {
                       "data": [
@@ -1187,10 +1108,7 @@
                   },
                   "relationships": {
                     "account": {
-                      "data": {
-                        "id": "a78d8f6b-daaa-4c69-a8fb-85039b0f5500",
-                        "type": "account"
-                      }
+                      "data": null
                     },
                     "benchmark": {
                       "data": {
@@ -1205,20 +1123,10 @@
                       "data": []
                     },
                     "hosts": {
-                      "data": [
-                        {
-                          "id": "5e65ac3f-8b44-4f60-9e99-abdafb31740c",
-                          "type": "host"
-                        }
-                      ]
+                      "data": []
                     },
                     "test_results": {
-                      "data": [
-                        {
-                          "id": "aa67c98c-d81f-5a9c-b0bc-26caa0051aea",
-                          "type": "test_result"
-                        }
-                      ]
+                      "data": []
                     }
                   }
                 },
@@ -1285,7 +1193,8 @@
                             "$ref": "#/components/schemas/benchmark"
                           },
                           "relationships": {
-                            "$ref": "#/components/schemas/benchmark_relationships"
+                            "type": "object",
+                            "properties": {}
                           }
                         }
                       }
@@ -1810,7 +1719,6 @@
                 ],
                 "meta": {
                   "total": 1,
-                  "search": null,
                   "limit": 10,
                   "offset": 1,
                   "relationships": true
@@ -2017,7 +1925,6 @@
                 ],
                 "meta": {
                   "total": 1,
-                  "search": null,
                   "limit": 10,
                   "offset": 1,
                   "relationships": true
@@ -2666,6 +2573,76 @@
                     }
                   },
                   {
+                    "id": "RHEL-7.9:scap-security-guide-0.1.57-4.el7_9",
+                    "type": "supported_ssg",
+                    "attributes": {
+                      "package": "scap-security-guide-0.1.57-4.el7_9",
+                      "version": "0.1.57",
+                      "os_major_version": "7",
+                      "os_minor_version": "9",
+                      "profiles": [
+                        "anssi_nt28_enhanced",
+                        "anssi_nt28_high",
+                        "anssi_nt28_intermediary",
+                        "anssi_nt28_minimal",
+                        "C2S",
+                        "cis",
+                        "cis_server_l1",
+                        "cis_workstation_l1",
+                        "cis_workstation_l2",
+                        "cjis",
+                        "cui",
+                        "e8",
+                        "hipaa",
+                        "ncp",
+                        "ospp",
+                        "pci-dss_centric",
+                        "pci-dss",
+                        "rhelh-stig",
+                        "rhelh-vpp",
+                        "rht-ccp",
+                        "standard",
+                        "stig",
+                        "stig_gui"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "RHEL-7.9:scap-security-guide-0.1.57-6.el7_9",
+                    "type": "supported_ssg",
+                    "attributes": {
+                      "package": "scap-security-guide-0.1.57-6.el7_9",
+                      "version": "0.1.57",
+                      "os_major_version": "7",
+                      "os_minor_version": "9",
+                      "profiles": [
+                        "anssi_nt28_enhanced",
+                        "anssi_nt28_high",
+                        "anssi_nt28_intermediary",
+                        "anssi_nt28_minimal",
+                        "C2S",
+                        "cis",
+                        "cis_server_l1",
+                        "cis_workstation_l1",
+                        "cis_workstation_l2",
+                        "cjis",
+                        "cui",
+                        "e8",
+                        "hipaa",
+                        "ncp",
+                        "ospp",
+                        "pci-dss_centric",
+                        "pci-dss",
+                        "rhelh-stig",
+                        "rhelh-vpp",
+                        "rht-ccp",
+                        "standard",
+                        "stig",
+                        "stig_gui"
+                      ]
+                    }
+                  },
+                  {
                     "id": "RHEL-8.0:scap-security-guide-0.1.42-11.el8",
                     "type": "supported_ssg",
                     "attributes": {
@@ -2761,6 +2738,62 @@
                         "ospp",
                         "pci-dss",
                         "stig"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "RHEL-8.4:scap-security-guide-0.1.57-3.el8_4",
+                    "type": "supported_ssg",
+                    "attributes": {
+                      "package": "scap-security-guide-0.1.57-3.el8_4",
+                      "version": "0.1.57",
+                      "os_major_version": "8",
+                      "os_minor_version": "4",
+                      "profiles": [
+                        "anssi_bp28_enhanced",
+                        "anssi_bp28_high",
+                        "anssi_bp28_intermediary",
+                        "anssi_bp28_minimal",
+                        "cis",
+                        "cis_server_l1",
+                        "cis_workstation_l1",
+                        "cis_workstation_l2",
+                        "cui",
+                        "e8",
+                        "hipaa",
+                        "ism_o",
+                        "ospp",
+                        "pci-dss",
+                        "stig",
+                        "stig_gui"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "RHEL-8.5:scap-security-guide-0.1.57-5.el8",
+                    "type": "supported_ssg",
+                    "attributes": {
+                      "package": "scap-security-guide-0.1.57-5.el8",
+                      "version": "0.1.57",
+                      "os_major_version": "8",
+                      "os_minor_version": "5",
+                      "profiles": [
+                        "anssi_bp28_enhanced",
+                        "anssi_bp28_high",
+                        "anssi_bp28_intermediary",
+                        "anssi_bp28_minimal",
+                        "cis",
+                        "cis_server_l1",
+                        "cis_workstation_l1",
+                        "cis_workstation_l2",
+                        "cui",
+                        "e8",
+                        "hipaa",
+                        "ism_o",
+                        "ospp",
+                        "pci-dss",
+                        "stig",
+                        "stig_gui"
                       ]
                     }
                   }
