@@ -12,9 +12,14 @@ class User < ApplicationRecord
   def authorized_to?(access_request)
     return true if ActiveModel::Type::Boolean.new.cast(Settings.disable_rbac)
 
-    rbac_permissions.any? do |access|
-      Rbac.verify(access.permission, access_request)
+    puts " - '#{access_request}' request accepted by"
+    n = rbac_permissions.any? do |access|
+      a = Rbac.verify(access.permission, access_request)
+      puts "=> '#{access.permission}'? #{a ? "✅" : "❌"}"
+      a
     end
+    puts "-" * 60
+    n
   end
 
   private
