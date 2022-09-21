@@ -2,6 +2,7 @@
 
 # Service for dowloading SSG configuration files
 class SsgConfigDownloader
+  # TODO: refactor?
   DS_FILE_PATH = 'tmp/supported_ssg.yaml'
   DS_FALLBACK_PATH = 'config/supported_ssg.default.yaml'
   AT_FILE_PATH = 'tmp/ssg-ansible-tasks.yaml'

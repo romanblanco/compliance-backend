@@ -2,6 +2,7 @@
 
 # This class updates supported SSGs yaml
 class SupportedSsgUpdater
+  # TODO: refactor?
   require 'yaml'
 
   KEYS_TO_REMOVE = %w[upstream_version brew_url].freeze

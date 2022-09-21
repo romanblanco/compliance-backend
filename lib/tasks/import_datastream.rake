@@ -23,6 +23,7 @@ namespace :ssg do
                       "#{Revision.datastreams} and #{Revision.remediations}")
   end
 
+  # TODO: move into a service
   desc 'Update supported SSGs fallback yaml'
   task sync_supported: [:environment] do
     SupportedSsgUpdater.run!
@@ -48,6 +49,7 @@ namespace :ssg do
     Rake::Task['import_remediations'].execute
   end
 
+  # TODO: move into a service
   desc 'Update compliance DB with data from an Xccdf datastream file'
   task import: [:environment] do
     begin
