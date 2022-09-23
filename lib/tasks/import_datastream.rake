@@ -52,6 +52,8 @@ namespace :ssg do
   # TODO: move into a service
   desc 'Update compliance DB with data from an Xccdf datastream file'
   task import: [:environment] do
+    # this is only being called by ssg:import_rhel_supported
+    binding.pry
     begin
       if (filename = ENV['DATASTREAM_FILE'])
         start = Time.zone.now
