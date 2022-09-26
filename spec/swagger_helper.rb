@@ -25,7 +25,7 @@ end
 def autogenerate_examples(example, label = 'Response example', summary = '', description = '')
   content = example.metadata[:response][:content] || {}
   body = JSON.parse(response.body, symbolize_names: true)
-  example_obj = { "#{label}": { value: body, summary: summary, description: description } }
+  example_obj = { "#{label}": { value: body, summary: , description: } }
   example.metadata[:response][:content] = content.deep_merge(
     {
       'application/json': {
