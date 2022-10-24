@@ -1,3 +1,14 @@
+GIT
+  remote: https://github.com/rswag/rswag.git
+  revision: 5a8c7fc9de2f7768da8ea2ae80036c5ed2259692
+  ref: 5a8c7fc9de2f7768da8ea2ae80036c5ed2259692
+  specs:
+    rswag-specs (0.0.0)
+      activesupport (>= 3.1, < 7.1)
+      json-schema (>= 2.2, < 4.0)
+      railties (>= 3.1, < 7.1)
+      rspec-core (>= 2.14)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -182,8 +193,8 @@ GEM
     irb (1.2.4)
       reline (>= 0.0.1)
     json (2.6.1)
-    json-schema (2.8.1)
-      addressable (>= 2.4)
+    json-schema (3.0.0)
+      addressable (>= 2.8)
     jsonapi-serializer (2.2.0)
       activesupport (>= 4.2)
     king_konf (1.0.0)
@@ -327,10 +338,6 @@ GEM
       rspec-support (~> 3.9)
     rspec-support (3.9.3)
     rswag-api (2.6.0)
-      railties (>= 3.1, < 7.1)
-    rswag-specs (2.6.0)
-      activesupport (>= 3.1, < 7.1)
-      json-schema (~> 2.2)
       railties (>= 3.1, < 7.1)
     rswag-ui (2.6.0)
       actionpack (>= 3.1, < 7.1)
@@ -484,7 +491,7 @@ DEPENDENCIES
   rexml
   rspec-rails
   rswag-api
-  rswag-specs
+  rswag-specs!
   rswag-ui
   rubocop
   rubocop-rails
@@ -513,4 +520,4 @@ DEPENDENCIES
   yabeda-sidekiq
 
 BUNDLED WITH
-   2.3.22
+   2.3.24
