@@ -1,9 +1,9 @@
 ARG deps="findutils hostname jq libpq openssl procps-ng ruby shared-mime-info tzdata"
-ARG devDeps="gcc gcc-c++ gzip libffi-devel make openssl-devel patch postgresql-devel redhat-rpm-config ruby-devel tar util-linux xz"
+ARG devDeps="gcc gcc-c++ gzip libffi-devel make openssl-devel patch postgresql postgresql-devel redhat-rpm-config ruby-devel tar util-linux xz"
 ARG extras=""
 ARG prod="true"
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal AS build
+FROM registry.access.redhat.com/ubi9/ubi-minimal AS build
 
 ARG deps
 ARG devDeps
@@ -15,23 +15,23 @@ USER 0
 WORKDIR /opt/app-root/src
 
 COPY ./.gemrc.prod /etc/gemrc
+COPY ./config/devel/dnf/ubi9.repo /etc/yum/repos.d/
 COPY ./Gemfile.lock ./Gemfile /opt/app-root/src/
 
-# install postgresql from centos if not building on RHSM system
-RUN FULL_RHEL=$(microdnf repolist --enabled | grep rhel-8) ; \
-    if [ -z "$FULL_RHEL" ] ; then \
-    rpm -Uvh http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/centos-stream-repos-8-4.el8.noarch.rpm \
-    http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/centos-gpg-keys-8-4.el8.noarch.rpm && \
-    sed -i 's/^\(enabled.*\)/\1\npriority=200/;' /etc/yum.repos.d/CentOS*.repo ; \
-    fi
-
-RUN microdnf module enable postgresql:13 && \
-    microdnf install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
-    postgresql && \
-    microdnf clean all
+# add dnf
+RUN microdnf install -y yum-utils
+RUN dnf info glibc --disablerepo ubi-9-baseos-rpms
+RUN mkdir /opt/tmp/
+RUN mkdir /opt/tmp/glibc
+# get version of glibc in ubi8 repository and download the package with it's dependencies
+# FIXME: the version should not be hardcoded (?)
+RUN dnf install -y glibc-2.28-211.el8 --disablerepo ubi-9-baseos-rpms --downloadonly --allowerasing --destdir /opt/tmp/
+RUN ls -al /opt/tmp/
+# extact the rpm into folder
+RUN dnf install -y --installroot=/opt/tmp/glibc/ /opt/tmp/glibc-*.rpm
+# FIXME: fails with "RPM: error: Unable to change root directory: Operation not permitted"
 
 RUN rpm -e --nodeps tzdata &>/dev/null                                          && \
-    microdnf module enable ruby:3.0                                             && \
     microdnf install --nodocs -y $deps $devDeps $extras                         && \
     chmod +t /tmp                                                               && \
     gem update --system --install-dir=/usr/share/gems --bindir /usr/bin         && \
@@ -71,6 +71,7 @@ USER 1001
 COPY --chown=1001:0 . /opt/app-root/src
 COPY --chown=1001:0 --from=build /opt/app-root/src/.bundle /opt/app-root/src/.bundle
 
+ENV LD_LIBRARY_PATH=/opt/tmp/glibc/lib64
 ENV RAILS_ENV=production RAILS_LOG_TO_STDOUT=true HOME=/opt/app-root/src DEV_DEPS=$devDeps
 
 CMD ["/opt/app-root/src/entrypoint.sh"]
