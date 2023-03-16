@@ -24,11 +24,13 @@ RUN microdnf repolist
 RUN microdnf -y --disablerepo=ubi-9-baseos-rpms download $(microdnf repoquery glibc --disablerepo=ubi-9-baseos-rpms | grep 'x86_64')
 # RUN microdnf --help
 # RUN ls -al
-RUN rpm2cpio glibc-*.x86_64.rpm | cpio -idmv
+RUN ls -al .
+RUN rpm2cpio glibc-*.x86_64.rpm | cpio -idmv -D /tmp
+RUN ls -al /tmp/
+RUN ls -al /tmp/lib64
 # RUN cpio --help
 # RUN ls /lib64
 # MALLOC_ARENA_MAX=2
-ENV LD_LIBRARY_PATH=/lib64
 # RUN cpio --help
 
 # # add dnf
@@ -53,7 +55,8 @@ RUN rpm -e --nodeps tzdata &>/dev/null                                          
     ( [[ $prod != "true" ]] || bundle config set --local deployment 'true' )    && \
     ( [[ $prod != "true" ]] || bundle config set --local path './.bundle' )     && \
     bundle config set --local retry '2'                                         && \
-    bundle install                                                              && \
+# in .bundle/**.so -> ldd /bin/bash **.so (nokogiri, etc.) # to find out which lib was used for compilation
+    LD_LIBRARY_PATH=/tmp/lib64 bundle install                                                              && \
     microdnf clean all -y                                                       && \
     ( [[ $prod != "true" ]] || bundle clean -V )
 
@@ -84,7 +87,7 @@ USER 1001
 COPY --chown=1001:0 . /opt/app-root/src
 COPY --chown=1001:0 --from=build /opt/app-root/src/.bundle /opt/app-root/src/.bundle
 
-ENV LD_LIBRARY_PATH=/opt/tmp/glibc/lib64
+#ENV LD_LIBRARY_PATH=/opt/tmp/glibc/lib64
 ENV RAILS_ENV=production RAILS_LOG_TO_STDOUT=true HOME=/opt/app-root/src DEV_DEPS=$devDeps
 
 CMD ["/opt/app-root/src/entrypoint.sh"]
