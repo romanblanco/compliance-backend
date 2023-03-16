@@ -16,20 +16,33 @@ WORKDIR /opt/app-root/src
 
 COPY ./.gemrc.prod /etc/gemrc
 COPY ./config/devel/dnf/ubi9.repo /etc/yum/repos.d/
+COPY ./config/devel/dnf/ubi8.repo /etc/yum/repos.d/
 COPY ./Gemfile.lock ./Gemfile /opt/app-root/src/
 
-# add dnf
-RUN microdnf install -y yum-utils
-RUN dnf info glibc --disablerepo ubi-9-baseos-rpms
-RUN mkdir /opt/tmp/
-RUN mkdir /opt/tmp/glibc
-# get version of glibc in ubi8 repository and download the package with it's dependencies
-# FIXME: the version should not be hardcoded (?)
-RUN dnf install -y glibc-2.28-211.el8 --disablerepo ubi-9-baseos-rpms --downloadonly --allowerasing --destdir /opt/tmp/
-RUN ls -al /opt/tmp/
-# extact the rpm into folder
-RUN dnf install -y --installroot=/opt/tmp/glibc/ /opt/tmp/glibc-*.rpm
-# FIXME: fails with "RPM: error: Unable to change root directory: Operation not permitted"
+RUN microdnf install -y cpio
+RUN microdnf repolist
+RUN microdnf -y --disablerepo=ubi-9-baseos-rpms download $(microdnf repoquery glibc --disablerepo=ubi-9-baseos-rpms | grep 'x86_64')
+# RUN microdnf --help
+# RUN ls -al
+RUN rpm2cpio glibc-*.x86_64.rpm | cpio -idmv
+# RUN cpio --help
+# RUN ls /lib64
+# MALLOC_ARENA_MAX=2
+ENV LD_LIBRARY_PATH=/lib64
+# RUN cpio --help
+
+# # add dnf
+# RUN microdnf install -y yum-utils
+# RUN dnf info glibc --disablerepo ubi-9-baseos-rpms
+# RUN mkdir /opt/tmp/
+# RUN mkdir /opt/tmp/glibc
+# # get version of glibc in ubi8 repository and download the package with it's dependencies
+# # FIXME: the version should not be hardcoded (?)
+# RUN dnf install -y glibc-2.28-211.el8 --disablerepo ubi-9-baseos-rpms --downloadonly --allowerasing --destdir /opt/tmp/
+# RUN ls -al /opt/tmp/
+# # extact the rpm into folder
+# RUN dnf install -y --installroot=/opt/tmp/glibc/ /opt/tmp/glibc-*.rpm
+# # FIXME: fails with "RPM: error: Unable to change root directory: Operation not permitted"
 
 RUN rpm -e --nodeps tzdata &>/dev/null                                          && \
     microdnf install --nodocs -y $deps $devDeps $extras                         && \
