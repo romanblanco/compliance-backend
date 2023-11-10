@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Status API', swagger_doc: 'v1/openapi.json' do
+describe 'Status API', openapi_spec: 'v1/openapi.json' do
   path '/status' do
     get 'status' do
       tags 'status'

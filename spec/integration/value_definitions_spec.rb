@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 require 'sidekiq/testing'
 
-describe 'ValueDefinitions API', swagger_doc: 'v1/openapi.json' do
+describe 'ValueDefinitions API', openapi_spec: 'v1/openapi.json' do
   before do
     @account = FactoryBot.create(:account)
     FactoryBot.create_list(:value_definition, 2)
@@ -24,7 +24,7 @@ describe 'ValueDefinitions API', swagger_doc: 'v1/openapi.json' do
       include_param
 
       response '200', 'lists all value_definitions requested' do
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
                properties: {

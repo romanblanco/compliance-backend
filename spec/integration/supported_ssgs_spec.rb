@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
 describe 'SupportedSsgs API', swagger_doc: 'v1/openapi.json' do
   before do
@@ -19,7 +19,7 @@ describe 'SupportedSsgs API', swagger_doc: 'v1/openapi.json' do
       include_param
 
       response '200', 'lists all supported_ssgs requested' do
-        let(:'X-RH-IDENTITY') { encoded_header(FactoryBot.create(:account)) }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(FactoryBot.create(:account)) } }
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
                properties: {

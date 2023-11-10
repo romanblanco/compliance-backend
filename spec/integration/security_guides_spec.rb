@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
+describe 'Security Guides', openapi_spec: 'v2/openapi.json' do
   let(:identity_header) do
     OpenStruct.new(
       cert_based?: false,
@@ -64,7 +64,9 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists all Security Guides requested' do
-        let(:sort_by) { ['os_major_version'] }
+        let(:request_params) { {
+          "sort_by" => ['os_major_version']
+        } }
         schema type: :object,
                properties: {
                  meta: ref_schema('metadata'),
@@ -87,7 +89,9 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists all Security Guides requested' do
-        let(:filter) { '(os_major_version=8)' }
+        let(:request_params) { {
+          "filter" => '(os_major_version=8)'
+        } }
         schema type: :object,
                properties: {
                  meta: ref_schema('metadata'),
@@ -110,7 +114,9 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns error if wrong parameters are used' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) { {
+          "sort_by" => ['description']
+        } }
         schema type: :object,
                properties: {
                  meta: ref_schema('metadata'),
@@ -133,7 +139,9 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns error if wrong parameters are used' do
-        let(:limit) { 103 }
+        let(:request_params) { {
+          "limit" => 103
+        } }
         schema type: :object,
                properties: {
                  meta: ref_schema('metadata'),
