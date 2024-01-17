@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module V2
-  # Model for profile tailoring
+  # Model for Profile tailoring
   class Tailoring < ApplicationRecord
     # FIXME: clean up after the remodel
     self.table_name = :tailorings

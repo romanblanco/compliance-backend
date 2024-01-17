@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module V2
-  # Model for SCAP policies
+  # Model for SCAP Policies
   class Policy < ApplicationRecord
     # FIXME: clean up after the remodel
     self.table_name = :v2_policies

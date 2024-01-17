@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module V2
-  # Model for ProfileRules
+  # Model for Profile Rules. This (eventually) comes from SCAP import.
   class ProfileRule < ApplicationRecord
     self.table_name = :profile_rules
 

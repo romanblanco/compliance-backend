@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
-# Stores information about rules. This comes from SCAP.
 module V2
-  # Model for Rules
+  # Stores information about Rules. This (eventually) comes from SCAP import.
   class Rule < ApplicationRecord
     # FIXME: clean up after the remodel
     self.table_name = :v2_rules

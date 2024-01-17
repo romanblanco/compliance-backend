@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module V2
-  # Model for Canonical Profile
+  # Model for canonical Profile. This (eventually) comes from SCAP import.
   class Profile < ApplicationRecord
     # FIXME: clean up after the remodel
     self.table_name = :canonical_profiles

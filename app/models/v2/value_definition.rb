@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
-# Stores information about value definitions. This comes from SCAP.
 module V2
-  # Model for Value Definitions
+  # Stores information about Value Definitions. This (eventually) comes from SCAP.
   class ValueDefinition < ApplicationRecord
     # FIXME: clean up after the remodel
     self.primary_key = :id

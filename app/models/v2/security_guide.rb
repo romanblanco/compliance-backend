@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module V2
-  # Model for Security Guides
+  # Model for Security Guides. This (eventually) comes from SCAP import.
   class SecurityGuide < ApplicationRecord
     # FIXME: clean up after the remodel
     self.primary_key = :id
