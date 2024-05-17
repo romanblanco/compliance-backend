@@ -29,6 +29,23 @@ module V2
       )
     end
 
+    PERCENTAGE = lambda do
+      percent = AN::NamedFunction.new(
+        'FLOOR' [
+          AN::NamedFunction.new(
+            'DIV', [
+              Arel.sql(COMPLIANT_SYSTEM_COUNT.call),
+              AN::InfixOperation.new(
+                '-',
+                Arel.sql(SYSTEM_COUNT.call),
+                Arel.sql(UNSUPPORTED_SYSTEM_COUNT.call))
+            ]
+          )
+        ]
+      )
+      Arel.sql(percent)
+    end
+
     # To prevent an autojoin with itself, there should not be an inverse relationship specified
     belongs_to :policy, class_name: 'V2::Policy', foreign_key: :id # rubocop:disable Rails/InverseOf
     belongs_to :account
@@ -46,6 +63,7 @@ module V2
     sortable_by :total_host_count
     sortable_by :business_objective
     sortable_by :compliance_threshold
+    sortable_by :percentage, PERCENTAGE
 
     searchable_by :title, %i[like unlike eq ne in notin]
     searchable_by :os_major_version, %i[eq ne in notin] do |_key, op, val|
