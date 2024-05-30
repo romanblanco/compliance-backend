@@ -30,20 +30,32 @@ module V2
     end
 
     PERCENTAGE = lambda do
-      percent = AN::NamedFunction.new(
-        'FLOOR' [
+      AN::NamedFunction.new(
+        'FLOOR', [
           AN::NamedFunction.new(
             'DIV', [
-              Arel.sql(COMPLIANT_SYSTEM_COUNT.call),
+              Arel::Nodes::SqlLiteral.new('1'),
+              # AN::NamedFunction.new('COUNT', [V2::System.arel_table[:id]]).filter(
+              #   Pundit.policy_scope(User.current, V2::System).where_clause.ast.and(
+              #     V2::TestResult.arel_table[:score].gteq(V2::Report.arel_table[:compliance_threshold])
+              #   )
+              # ),
               AN::InfixOperation.new(
                 '-',
-                Arel.sql(SYSTEM_COUNT.call),
-                Arel.sql(UNSUPPORTED_SYSTEM_COUNT.call))
+                AN::NamedFunction.new('COUNT', [V2::System.arel_table[:id]]).filter(
+                  Pundit.policy_scope(User.current, V2::System).where_clause.ast
+                ),
+                Arel::Nodes::SqlLiteral.new('1')
+                # AN::NamedFunction.new('COUNT', [V2::System.arel_table[:id]]).filter(
+                #   Pundit.policy_scope(User.current, V2::System).where_clause.ast.and(
+                #     V2::TestResult.arel_table[:supported].not_eq('t')
+                #   )
+                # )
+              )
             ]
           )
         ]
       )
-      Arel.sql(percent)
     end
 
     # To prevent an autojoin with itself, there should not be an inverse relationship specified
