@@ -117,6 +117,7 @@ group :development, :test do
   gem 'mocha'
   gem 'pry-byebug'
   gem 'pry-remote'
+  gem 'rails_sql_prettifier'
   gem 'rspec-rails'
   gem 'rswag-specs'
   gem 'rubocop', require: false
