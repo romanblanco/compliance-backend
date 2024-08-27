@@ -69,6 +69,15 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
         run_test!
       end
 
+      response '200', 'Lists Test Results under a Report' do
+        let(:filter) { '(failed_rule_severity=high)' }
+        v2_collection_schema 'test_result'
+
+        after { |e| autogenerate_examples(e, 'List of Test Results filtered by "(failed_rule_severity=high)"') }
+
+        run_test!
+      end
+
       response '422', 'Returns with Unprocessable Content' do
         let(:sort_by) { ['description'] }
         schema ref_schema('errors')
