@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Rules API', swagger_doc: 'v1/openapi.json' do
+describe 'Rules API', openapi_spec: 'v1/openapi.json' do
   before do
     @account = FactoryBot.create(:account)
     @profile = FactoryBot.create(
@@ -34,7 +34,7 @@ describe 'Rules API', swagger_doc: 'v1/openapi.json' do
       include_param
 
       response '200', 'lists all rules requested' do
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
                properties: {
@@ -69,12 +69,14 @@ describe 'Rules API', swagger_doc: 'v1/openapi.json' do
       content_types
       auth_header
 
-      parameter name: :id, in: :path, type: :string
+      parameter name: 'id', in: :path, type: :string
       include_param
 
       response '404', 'rule not found' do
-        let(:id) { 'invalid' }
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
+        let(:request_params) { {
+          "id" => 'invalid'
+        } }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
         let(:include) { '' } # work around buggy rswag
 
         after { |e| autogenerate_examples(e) }
@@ -83,8 +85,10 @@ describe 'Rules API', swagger_doc: 'v1/openapi.json' do
       end
 
       response '200', 'retrieves a rule' do
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
-        let(:id) { @profile.rules.first.id }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
+        let(:request_params) { {
+          "id" => @profile.rules.first.id
+        } }
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
                properties: {

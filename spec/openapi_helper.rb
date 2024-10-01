@@ -10,9 +10,9 @@ require './spec/api/v2/openapi'
 include Api::V1::Schemas::Util # rubocop:disable Style/MixinUsage
 
 RSpec.configure do |config|
-  config.openapi_root = Rails.root.to_s + '/swagger'
+  config.openapi_root = Rails.root.to_s + '/openapi'
   # FIXME: https://github.com/rswag/rswag/issues/666
-  # config.swagger_strict_schema_validation = true
+  # config.openapi_strict_schema_validation = true
   config.before(:each) do
     stub_request(:get, /#{Settings.endpoints.rbac_url}/)
       .to_return(status: 200,
@@ -86,14 +86,14 @@ end
 # rubocop:enable Metrics/MethodLength
 
 def include_param
-  parameter name: :include, in: :query, required: false,
+  parameter name: 'include', in: :query, required: false,
             schema: { type: :string },
             description: 'A comma seperated list of resources to include in ' \
                          'the response'
 end
 
 def pagination_params
-  parameter name: :limit, in: :query, required: false,
+  parameter name: 'limit', in: :query, required: false,
             description: 'The number of items to return',
             schema: { type: :integer, maximum: 100, minimum: 1, default: 10 }
   parameter name: :offset, in: :query, required: false,
@@ -103,10 +103,10 @@ def pagination_params
 end
 
 def pagination_params_v2
-  parameter name: :limit, in: :query, required: false,
+  parameter name: 'limit', in: :query, required: false,
             description: 'Number of items to return per page',
             schema: { type: :number, maximum: 100, minimum: 1, default: 10 }
-  parameter name: :offset, in: :query, required: false,
+  parameter name: 'offset', in: :query, required: false,
             description: 'Offset of first item of paginated response',
             schema: { type: :integer, minimum: 0, default: 0 }
 end
@@ -118,7 +118,7 @@ def ids_only_param
 end
 
 def search_params
-  parameter name: :search, in: :query, required: false,
+  parameter name: 'search', in: :query, required: false,
             description: 'Query string compliant with scoped_search ' \
             'query language: ' \
             'https://github.com/wvanbergen/scoped_search/wiki/Query-language',
@@ -148,7 +148,7 @@ def tags_params
 end
 
 def sort_params(model = nil)
-  parameter name: :sort_by, in: :query, required: false,
+  parameter name: 'sort_by', in: :query, required: false,
             description: 'A string or an array of fields with an optional direction ' \
              '(:asc or :desc) to sort the results.',
             schema: {
@@ -219,7 +219,7 @@ def content_types
 end
 
 def auth_header
-  parameter name: :'X-RH-IDENTITY', in: :header, schema: { type: :string }
+  parameter name: 'X-RH-IDENTITY', in: :header, schema: { type: :string }
 end
 
 def v2_auth_header
