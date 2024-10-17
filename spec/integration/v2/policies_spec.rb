@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Policies', swagger_doc: 'v2/openapi.json' do
+describe 'Policies', openapi_spec: 'v2/openapi.json' do
   let(:user) { FactoryBot.create(:v2_user) }
-  let(:'X-RH-IDENTITY') { user.account.identity_header.raw }
+  let(:request_headers) { { 'X-RH-IDENTITY' => user.account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ) }
 
@@ -31,7 +31,11 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Policies' do
-        let(:sort_by) { ['os_major_version'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['os_major_version']
+          }
+        end
         v2_collection_schema 'policy'
 
         after { |e| autogenerate_examples(e, 'List of Policies sorted by "os_major_version:asc"') }
@@ -40,7 +44,11 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Policies' do
-        let(:filter) { '(os_major_version=8)' }
+        let(:request_params) do
+          {
+            'filter' => '(os_major_version=8)'
+          }
+        end
         v2_collection_schema 'policy'
 
         after { |e| autogenerate_examples(e, 'List of Policies filtered by "(os_major_version=8)"') }
@@ -49,7 +57,11 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -58,7 +70,11 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -77,13 +93,15 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       parameter name: :data, in: :body, schema: ref_schema('policy')
 
       response '201', 'Creates a Policy' do
-        let(:data) do
+        let(:request_params) do
           {
-            title: 'Foo',
-            profile_id: FactoryBot.create(:v2_profile).id,
-            compliance_threshold: 33.3,
-            description: 'Hello World',
-            business_objective: 'Serious Business Objective'
+            'data' => {
+              title: 'Foo',
+              profile_id: FactoryBot.create(:v2_profile).id,
+              compliance_threshold: 33.3,
+              description: 'Hello World',
+              business_objective: 'Serious Business Objective'
+            }
           }
         end
 
@@ -109,7 +127,11 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       parameter name: :policy_id, in: :path, type: :string, required: true
 
       response '200', 'Returns a Policy' do
-        let(:policy_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => item.id
+          }
+        end
         v2_item_schema('policy')
 
         after { |e| autogenerate_examples(e, 'Returns a Policy') }
@@ -118,7 +140,11 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:policy_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'policy_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing Policy') }
@@ -137,10 +163,13 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       parameter name: :policy_id, in: :path, type: :string, required: true
       parameter name: :data, in: :body, schema: ref_schema('policy_update')
 
-      let(:data) { { compliance_threshold: 100 } }
-
       response '202', 'Updates a Policy' do
-        let(:policy_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => item.id,
+            'data' => { compliance_threshold: 100 }
+          }
+        end
         v2_item_schema('policy')
 
         after { |e| autogenerate_examples(e, 'Returns the updated Policy') }
@@ -159,7 +188,11 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       parameter name: :policy_id, in: :path, type: :string, required: true
 
       response '202', 'Deletes a Policy' do
-        let(:policy_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => item.id
+          }
+        end
         v2_item_schema('policy')
 
         after { |e| autogenerate_examples(e, 'Deletes a Policy') }
@@ -197,6 +230,11 @@ describe 'Policies', swagger_doc: 'v2/openapi.json' do
       parameter name: :system_id, in: :path, type: :string, required: true
 
       response '200', 'Lists Policies' do
+        let(:request_params) do
+          {
+            'system_id' => system_id
+          }
+        end
         v2_collection_schema 'policy'
 
         after { |e| autogenerate_examples(e, 'List of Policies under a System') }

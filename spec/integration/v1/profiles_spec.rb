@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 require 'sidekiq/testing'
 
-describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
+describe 'Profiles API', openapi_spec: 'v1/openapi.json' do
   before do
     @account = FactoryBot.create(:account)
     @policy = FactoryBot.create(
@@ -50,7 +50,7 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
           FactoryBot.create(:profile, :with_values, account: @account, policy: @policy)
         end
 
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
                properties: {
@@ -90,7 +90,7 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
             host: @hosts.second, score: 0.68
           )
         end
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
         let(:include) { '' } # work around buggy rswag
         let(:search) { 'os_major_version = 7' }
         schema type: :object,
@@ -121,7 +121,7 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
       content_types
       auth_header
 
-      parameter name: :data, in: :body, schema: {
+      parameter name: 'data', in: :body, schema: {
         type: :object,
         properties: {
           type: { type: :string, example: 'profile' },
@@ -173,30 +173,32 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
           @parent.rules << rule2
           FactoryBot.create_list(:value_definition, 3, benchmark: @parent.benchmark)
         end
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
         let(:include) { '' } # work around buggy rswag
-        let(:data) do
+        let(:request_params) do
           {
-            data: {
-              attributes: {
-                parent_profile_id: @parent.id,
-                name: 'A custom name',
-                compliance_threshold: 93.5,
-                business_objective: 'LATAM Expansion',
-                values: @parent.benchmark.value_definitions.sample(3).each_with_object({}) do |value, obj|
-                  obj[value.id] = Faker::Alphanumeric.alpha(number: 6)
-                end
-              },
-              relationships: {
-                rules: {
-                  data: @parent.benchmark.rules.map do |rule|
-                    { id: rule.id, type: 'rule' }
+            'data' => {
+              data: {
+                attributes: {
+                  parent_profile_id: @parent.id,
+                  name: 'A custom name',
+                  compliance_threshold: 93.5,
+                  business_objective: 'LATAM Expansion',
+                  values: @parent.benchmark.value_definitions.sample(3).each_with_object({}) do |value, obj|
+                    obj[value.id] = Faker::Alphanumeric.alpha(number: 6)
                   end
                 },
-                hosts: {
-                  data: @hosts.map do |host|
-                    { id: host.id, type: 'host' }
-                  end
+                relationships: {
+                  rules: {
+                    data: @parent.benchmark.rules.map do |rule|
+                      { id: rule.id, type: 'rule' }
+                    end
+                  },
+                  hosts: {
+                    data: @hosts.map do |host|
+                      { id: host.id, type: 'host' }
+                    end
+                  }
                 }
               }
             }
@@ -232,27 +234,33 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
       content_types
       auth_header
 
-      parameter name: :id, in: :path, type: :string
+      parameter name: 'id', in: :path, type: :string
       include_param
 
       response '404', 'profile not found' do
-        let(:id) { 'invalid' }
-        let(:'X-RH-IDENTITY') { encoded_header }
+        let(:request_params) do
+          {
+            'id' => 'invalid'
+          }
+        end
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header } }
         let(:include) { '' } # work around buggy rswag
         after { |e| autogenerate_examples(e) }
         run_test!
       end
 
       response '200', 'retrieves a profile' do
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
-        let(:id) do
-          FactoryBot.create(
-            :profile,
-            :with_values,
-            parent_profile: @profile,
-            policy: @policy,
-            account: @account
-          ).id
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
+        let(:request_params) do
+          {
+            'id' => FactoryBot.create(
+              :profile,
+              :with_values,
+              parent_profile: @profile,
+              policy: @policy,
+              account: @account
+            ).id
+          }
         end
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
@@ -281,9 +289,11 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
           host = FactoryBot.create(:host, org_id: account.org_id)
           FactoryBot.create(:test_result, profile: @parent, host: host, score: 0.42)
         end
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
-        let(:id) do
-          @parent.id
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
+        let(:request_params) do
+          {
+            'id' => @parent.id
+          }
         end
         let(:include) { 'benchmark' }
         schema type: :object,
@@ -327,8 +337,8 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
       auth_header
 
       include_param
-      parameter name: :id, in: :path, type: :string
-      parameter name: :data, in: :body, schema: {
+      parameter name: 'id', in: :path, type: :string
+      parameter name: 'data', in: :body, schema: {
         type: :object,
         properties: {
           type: { type: :string, example: 'profile' },
@@ -375,10 +385,14 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
       }
 
       response '404', 'profile not found' do
-        let(:id) { 'invalid' }
-        let(:'X-RH-IDENTITY') { encoded_header }
+        let(:request_params) do
+          {
+            'id' => 'invalid',
+            'data' => {}
+          }
+        end
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header } }
         let(:include) { '' } # work around buggy rswag
-        let(:data) {}
 
         after { |e| autogenerate_examples(e) }
 
@@ -386,44 +400,44 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
       end
 
       response '200', 'updates a profile' do
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
-        let(:id) do
-          FactoryBot.create(
-            :profile,
-            :with_rules,
-            :with_values,
-            account: @account,
-            policy: @policy,
-            parent_profile: @parent
-          ).id
-        end
-        let(:include) { '' } # work around buggy rswag
-        let(:data) do
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
+        let(:request_params) do
           {
-            data: {
-              attributes: {
-                description: 'An updated custom description',
-                compliance_threshold: 93.5,
-                business_objective: 'APAC Expansion',
-                values: @parent.benchmark.value_definitions.sample(3).each_with_object({}) do |value, obj|
-                  obj[value.id] = Faker::Alphanumeric.alpha(number: 6)
-                end
-              },
-              relationships: {
-                rules: {
-                  data: @parent.benchmark.rules.map do |rule|
-                    { id: rule.id, type: 'rule' }
+            'id' => FactoryBot.create(
+              :profile,
+              :with_rules,
+              :with_values,
+              account: @account,
+              policy: @policy,
+              parent_profile: @parent
+            ).id,
+            'data' => {
+              data: {
+                attributes: {
+                  description: 'An updated custom description',
+                  compliance_threshold: 93.5,
+                  business_objective: 'APAC Expansion',
+                  values: @parent.benchmark.value_definitions.sample(3).each_with_object({}) do |value, obj|
+                    obj[value.id] = Faker::Alphanumeric.alpha(number: 6)
                   end
                 },
-                hosts: {
-                  data: @hosts.map do |host|
-                    { id: host.id, type: 'host' }
-                  end
+                relationships: {
+                  rules: {
+                    data: @parent.benchmark.rules.map do |rule|
+                      { id: rule.id, type: 'rule' }
+                    end
+                  },
+                  hosts: {
+                    data: @hosts.map do |host|
+                      { id: host.id, type: 'host' }
+                    end
+                  }
                 }
               }
             }
           }
         end
+        let(:include) { '' } # work around buggy rswag
 
         schema type: :object,
                properties: {
@@ -454,12 +468,16 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
       content_types
       auth_header
 
-      parameter name: :id, in: :path, type: :string
+      parameter name: 'id', in: :path, type: :string
       include_param
 
       response '404', 'profile not found' do
-        let(:id) { 'invalid' }
-        let(:'X-RH-IDENTITY') { encoded_header }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header } }
+        let(:request_params) do
+          {
+            'id' => 'invalid'
+          }
+        end
         let(:include) { '' } # work around buggy rswag
 
         after { |e| autogenerate_examples(e) }
@@ -468,9 +486,11 @@ describe 'Profiles API', swagger_doc: 'v1/openapi.json' do
       end
 
       response '202', 'destroys a profile' do
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
-        let(:id) do
-          FactoryBot.create(:profile, account: @account).id
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
+        let(:request_params) do
+          {
+            'id' => FactoryBot.create(:profile, account: @account).id
+          }
         end
         let(:include) { '' } # work around buggy rswag
 

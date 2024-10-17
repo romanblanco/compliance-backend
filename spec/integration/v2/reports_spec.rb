@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Reports', swagger_doc: 'v2/openapi.json' do
+describe 'Reports', openapi_spec: 'v2/openapi.json' do
   let(:user) { FactoryBot.create(:v2_user) }
-  let(:'X-RH-IDENTITY') { user.account.identity_header.raw }
+  let(:request_headers) { { 'X-RH-IDENTITY' => user.account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ, Rbac::REPORT_READ) }
 
@@ -38,7 +38,11 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Reports' do
-        let(:sort_by) { ['os_major_version'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['os_major_version']
+          }
+        end
         v2_collection_schema 'report'
 
         after { |e| autogenerate_examples(e, 'List of Reports sorted by "os_major_version:asc"') }
@@ -47,7 +51,11 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -56,7 +64,11 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -108,7 +120,11 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       parameter name: :report_id, in: :path, type: :string, required: true
 
       response '200', 'Returns a Report' do
-        let(:report_id) { item.id }
+        let(:request_params) do
+          {
+            'report_id' => item.id
+          }
+        end
         v2_item_schema('report')
 
         after { |e| autogenerate_examples(e, 'Returns a Report') }
@@ -117,7 +133,11 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:report_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'report_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing Report') }
@@ -136,7 +156,11 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       parameter name: :report_id, in: :path, type: :string, required: true
 
       response '202', "Deletes Report's test results" do
-        let(:report_id) { item.id }
+        let(:request_params) do
+          {
+            'report_id' => item.id
+          }
+        end
 
         after { |e| autogenerate_examples(e, "Deletes Report's test results") }
 
@@ -167,7 +191,11 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       parameter name: :report_id, in: :path, type: :string, required: true
 
       response '200', 'Returns detailed stats for a Report' do
-        let(:report_id) { item.id }
+        let(:request_params) do
+          {
+            'report_id' => item.id
+          }
+        end
         v2_item_schema('report_stats')
 
         after { |e| autogenerate_examples(e, 'Returns detailed stats for a Report') }
@@ -176,7 +204,11 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:report_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'report_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing Report') }
@@ -216,6 +248,11 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       parameter name: :system_id, in: :path, type: :string, required: true
 
       response '200', 'Lists Reports' do
+        let(:request_params) do
+          {
+            'system_id' => system_id
+          }
+        end
         v2_collection_schema 'report'
 
         after { |e| autogenerate_examples(e, 'List of Reports') }
@@ -224,7 +261,12 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Reports' do
-        let(:sort_by) { ['title'] }
+        let(:request_params) do
+          {
+            'system_id' => system_id,
+            'sort_by' => ['title']
+          }
+        end
         v2_collection_schema 'report'
 
         after { |e| autogenerate_examples(e, 'List of Reports sorted by "title:asc"') }
@@ -233,7 +275,12 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'system_id' => system_id,
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -242,7 +289,12 @@ describe 'Reports', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'system_id' => system_id,
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }

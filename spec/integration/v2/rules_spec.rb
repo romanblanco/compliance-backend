@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Rules', swagger_doc: 'v2/openapi.json' do
+describe 'Rules', openapi_spec: 'v2/openapi.json' do
   let(:user) { FactoryBot.create(:v2_user) }
-  let(:'X-RH-IDENTITY') { user.account.identity_header.raw }
+  let(:request_headers) { { 'X-RH-IDENTITY' => user.account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ) }
 
@@ -27,6 +27,11 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       parameter name: :security_guide_id, in: :path, type: :string, required: true
 
       response '200', 'Lists Rules' do
+        let(:request_params) do
+          {
+            'security_guide_id' => security_guide_id
+          }
+        end
         v2_collection_schema 'rule'
 
         after { |e| autogenerate_examples(e, 'List of Rules') }
@@ -35,7 +40,12 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Rules' do
-        let(:sort_by) { ['precedence'] }
+        let(:request_params) do
+          {
+            'security_guide_id' => security_guide_id,
+            'sort_by' => ['precedence']
+          }
+        end
         v2_collection_schema 'rule'
 
         after { |e| autogenerate_examples(e, 'List of Rules sorted by "precedence:asc"') }
@@ -44,7 +54,12 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'security_guide_id' => security_guide_id,
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -53,7 +68,12 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'security_guide_id' => security_guide_id,
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -78,8 +98,12 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
                 description: "UUID or a ref_id with '.' characters replaced with '-'"
 
       response '200', 'Returns a Rule' do
-        let(:rule_id) { item.id }
-        let(:security_guide_id) { item.security_guide.id }
+        let(:request_params) do
+          {
+            'security_guide_id' => item.security_guide.id,
+            'rule_id' => item.id
+          }
+        end
         v2_item_schema('rule')
 
         after { |e| autogenerate_examples(e, 'Returns a Rule') }
@@ -88,8 +112,12 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:rule_id) { Faker::Internet.uuid }
-        let(:security_guide_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'security_guide_id' => Faker::Internet.uuid,
+            'rule_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after do |e|
@@ -122,6 +150,12 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       parameter name: :profile_id, in: :path, type: :string, required: true
 
       response '200', 'Lists Rules assigned to a Profile' do
+        let(:request_params) do
+          {
+            'security_guide_id' => security_guide_id,
+            'profile_id' => profile_id
+          }
+        end
         v2_collection_schema 'rule'
 
         after { |e| autogenerate_examples(e, 'List of Rules') }
@@ -130,7 +164,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Rules assigned to a Profile' do
-        let(:sort_by) { ['precedence'] }
+        let(:request_params) do
+          {
+            'security_guide_id' => security_guide_id,
+            'profile_id' => profile_id,
+            'sort_by' => ['precedence']
+          }
+        end
         v2_collection_schema 'rule'
 
         after { |e| autogenerate_examples(e, 'List of Rules sorted by "precedence:asc"') }
@@ -139,7 +179,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'security_guide_id' => security_guide_id,
+            'profile_id' => profile_id,
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -148,7 +194,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'security_guide_id' => security_guide_id,
+            'profile_id' => profile_id,
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -174,9 +226,14 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
                 description: "UUID or a ref_id with '.' characters replaced with '-'"
 
       response '200', 'Returns a Rule assigned to a Profile' do
-        let(:security_guide_id) { V2::Profile.find(profile_id).security_guide_id }
         let(:profile_id) { FactoryBot.create(:v2_profile).id }
-        let(:rule_id) { item.id }
+        let(:request_params) do
+          {
+            'security_guide_id' => V2::Profile.find(profile_id).security_guide_id,
+            'profile_id' => profile_id,
+            'rule_id' => item.id
+          }
+        end
 
         v2_item_schema('rule')
 
@@ -186,9 +243,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:rule_id) { Faker::Internet.uuid }
-        let(:profile_id) { Faker::Internet.uuid }
-        let(:security_guide_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'security_guide_id' => Faker::Internet.uuid,
+            'profile_id' => Faker::Internet.uuid,
+            'rule_id' => Faker::Internet.uuid
+          }
+        end
 
         schema ref_schema('errors')
 
@@ -210,15 +271,10 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       )
     end
 
-    let(:tailoring_id) do
-      FactoryBot.create(
-        :v2_tailoring,
-        policy: V2::Policy.find(policy_id),
-        os_minor_version: 9
-      ).id
-    end
-
     let(:policy_id) { FactoryBot.create(:v2_policy, account: user.account, supports_minors: [9]).id }
+    let(:tailoring_id) do
+      FactoryBot.create(:v2_tailoring, policy: V2::Policy.find(policy_id), os_minor_version: 9).id
+    end
 
     get 'Request Rules assigned to a Tailoring' do
       v2_auth_header
@@ -235,6 +291,12 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       parameter name: :tailoring_id, in: :path, type: :string, required: true
 
       response '200', 'Lists Rules assigned to a Tailoring' do
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => tailoring_id
+          }
+        end
         v2_collection_schema 'rule'
 
         after { |e| autogenerate_examples(e, 'List of Rules') }
@@ -243,7 +305,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Rules assigned to a Tailoring' do
-        let(:sort_by) { ['precedence'] }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => tailoring_id,
+            'sort_by' => ['precedence']
+          }
+        end
         v2_collection_schema 'rule'
 
         after { |e| autogenerate_examples(e, 'List of Rules sorted by "precedence:asc"') }
@@ -252,7 +320,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => tailoring_id,
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -261,7 +335,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => tailoring_id,
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -274,8 +354,6 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       let(:items) do
         FactoryBot.create_list(:v2_rule, 25, security_guide: V2::Tailoring.find(tailoring_id).security_guide)
       end
-
-      let(:data) { { ids: items.map(&:id) } }
 
       v2_auth_header
       tags 'Policies'
@@ -291,6 +369,14 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       }
 
       response '202', 'Assigns all specified rules and unassigns the rest' do
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => tailoring_id,
+            'data' => { ids: items.map(&:id) }
+          }
+        end
+
         v2_collection_schema 'rule'
 
         after { |e| autogenerate_examples(e, 'List of assigned Rules') }
@@ -301,6 +387,7 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
   end
 
   path '/policies/{policy_id}/tailorings/{tailoring_id}/rules/{rule_id}' do
+    let(:policy_id) { FactoryBot.create(:v2_policy, account: user.account, supports_minors: [9]).id }
     let(:tailoring_id) do
       FactoryBot.create(
         :v2_tailoring,
@@ -308,8 +395,6 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
         os_minor_version: 9
       ).id
     end
-
-    let(:policy_id) { FactoryBot.create(:v2_policy, account: user.account, supports_minors: [9]).id }
 
     patch 'Assign a Rule to a Tailoring' do
       let(:item) do
@@ -328,7 +413,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
                 description: "UUID or a ref_id with '.' characters replaced with '-'"
 
       response '202', 'Assigns a Rule to a Tailoring' do
-        let(:rule_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => tailoring_id,
+            'rule_id' => item.id
+          }
+        end
 
         after { |e| autogenerate_examples(e, 'Assigns a Rule to a Tailoring') }
 
@@ -336,7 +427,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not found' do
-        let(:rule_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => tailoring_id,
+            'rule_id' => Faker::Internet.uuid
+          }
+        end
 
         after { |e| autogenerate_examples(e, 'Returns with Not found') }
 
@@ -365,7 +462,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
                 description: "UUID or a ref_id with '.' characters replaced with '-'"
 
       response '202', 'Unassigns a Rule from a Tailoring' do
-        let(:rule_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => tailoring_id,
+            'rule_id' => item.id
+          }
+        end
 
         after { |e| autogenerate_examples(e, 'Unassigns a Rule from a Tailoring') }
 
@@ -373,7 +476,13 @@ describe 'Rules', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not found' do
-        let(:rule_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => tailoring_id,
+            'rule_id' => Faker::Internet.uuid
+          }
+        end
 
         after { |e| autogenerate_examples(e, 'Description of an error when unassigning a non-existing Rule') }
 

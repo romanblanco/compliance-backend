@@ -9,7 +9,7 @@ module Api
       module TailoringFile
         extend Api::V2::Schemas::Util
 
-        FALLBACK_PATH = Rails.root.join('swagger/v2/tailoring_schema.json')
+        FALLBACK_PATH = Rails.root.join('openapi/v2/tailoring_schema.json')
 
         def self.retrieve_schema
           # Download the JSON:API schema from GitHub

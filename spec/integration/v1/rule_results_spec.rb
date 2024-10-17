@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'RuleResults API', swagger_doc: 'v1/openapi.json' do
+describe 'RuleResults API', openapi_spec: 'v1/openapi.json' do
   before do
     @account = FactoryBot.create(:account)
     host = FactoryBot.create(:host, org_id: @account.org_id)
@@ -37,7 +37,7 @@ describe 'RuleResults API', swagger_doc: 'v1/openapi.json' do
       include_param
 
       response '200', 'lists all rule_results requested' do
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
                properties: {
