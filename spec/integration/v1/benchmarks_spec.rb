@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Benchmarks API', swagger_doc: 'v1/openapi.json' do
+describe 'Benchmarks API', openapi_spec: 'v1/openapi.json' do
   before do
     stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ)
   end
@@ -46,7 +46,7 @@ describe 'Benchmarks API', swagger_doc: 'v1/openapi.json' do
       include_param
 
       response '200', 'lists all benchmarks requested' do
-        let(:'X-RH-IDENTITY') { encoded_header }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header } }
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
                properties: {
@@ -91,12 +91,16 @@ describe 'Benchmarks API', swagger_doc: 'v1/openapi.json' do
       content_types
       auth_header
 
-      parameter name: :id, in: :path, type: :string
+      parameter name: 'id', in: :path, type: :string
       include_param
 
       response '404', 'benchmark not found' do
-        let(:id) { 'invalid' }
-        let(:'X-RH-IDENTITY') { encoded_header }
+        let(:request_params) do
+          {
+            'id' => 'invalid'
+          }
+        end
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header } }
         let(:include) { '' } # work around buggy rswag
 
         after { |e| autogenerate_examples(e) }
@@ -105,8 +109,12 @@ describe 'Benchmarks API', swagger_doc: 'v1/openapi.json' do
       end
 
       response '200', 'retrieves a benchmark' do
-        let(:'X-RH-IDENTITY') { encoded_header }
-        let(:id) { @profile.benchmark.id }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header } }
+        let(:request_params) do
+          {
+            'id' => @profile.benchmark.id
+          }
+        end
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
                properties: {

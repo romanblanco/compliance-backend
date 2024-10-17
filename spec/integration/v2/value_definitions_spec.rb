@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Value Definitions', swagger_doc: 'v2/openapi.json' do
-  let(:'X-RH-IDENTITY') { FactoryBot.create(:v2_user).account.identity_header.raw }
+describe 'Value Definitions', openapi_spec: 'v2/openapi.json' do
+  let(:request_headers) { { 'X-RH-IDENTITY' => FactoryBot.create(:v2_user).account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ) }
 
@@ -26,6 +26,11 @@ describe 'Value Definitions', swagger_doc: 'v2/openapi.json' do
       parameter name: :security_guide_id, in: :path, type: :string, required: true
 
       response '200', 'Lists Value Definitions' do
+        let(:request_params) do
+          {
+            'security_guide_id' => security_guide_id
+          }
+        end
         v2_collection_schema 'value_definition'
 
         after { |e| autogenerate_examples(e, 'List of Value Definitions') }
@@ -34,7 +39,12 @@ describe 'Value Definitions', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Value Definitions' do
-        let(:sort_by) { ['title'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['title'],
+            'security_guide_id' => security_guide_id
+          }
+        end
         v2_collection_schema 'value_definition'
 
         after { |e| autogenerate_examples(e, 'List of Value Definitions sorted by "title:asc"') }
@@ -43,7 +53,12 @@ describe 'Value Definitions', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Value Definitions' do
-        let(:filter) { "(title=\"#{V2::ValueDefinition.first.title}\")" }
+        let(:request_params) do
+          {
+            'filter' => "(title=\"#{V2::ValueDefinition.first.title}\")",
+            'security_guide_id' => security_guide_id
+          }
+        end
         v2_collection_schema 'value_definition'
 
         after do |e|
@@ -54,7 +69,12 @@ describe 'Value Definitions', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['description'],
+            'security_guide_id' => security_guide_id
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -63,7 +83,12 @@ describe 'Value Definitions', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'limit' => 103,
+            'security_guide_id' => security_guide_id
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -87,8 +112,12 @@ describe 'Value Definitions', swagger_doc: 'v2/openapi.json' do
       parameter name: :value_definition_id, in: :path, type: :string, required: true
 
       response '200', 'Returns a Value Definition' do
-        let(:value_definition_id) { item.id }
-        let(:security_guide_id) { item.security_guide.id }
+        let(:request_params) do
+          {
+            'value_definition_id' => item.id,
+            'security_guide_id' => item.security_guide.id
+          }
+        end
         v2_item_schema('value_definition')
 
         after { |e| autogenerate_examples(e, 'Returns a Value Definition') }
@@ -97,8 +126,12 @@ describe 'Value Definitions', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:value_definition_id) { Faker::Internet.uuid }
-        let(:security_guide_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'value_definition_id' => Faker::Internet.uuid,
+            'security_guide_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after do |e|

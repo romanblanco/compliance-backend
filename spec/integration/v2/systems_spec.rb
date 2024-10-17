@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Systems', swagger_doc: 'v2/openapi.json' do
+describe 'Systems', openapi_spec: 'v2/openapi.json' do
   let(:user) { FactoryBot.create(:v2_user) }
-  let(:'X-RH-IDENTITY') { user.account.identity_header.raw }
+  let(:request_headers) { { 'X-RH-IDENTITY' => user.account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ) }
 
@@ -34,7 +34,11 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Systems' do
-        let(:sort_by) { ['os_major_version'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['os_major_version']
+          }
+        end
         v2_collection_schema 'system'
 
         after { |e| autogenerate_examples(e, 'List of Systems sorted by "os_major_version:asc"') }
@@ -43,7 +47,11 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Systems' do
-        let(:filter) { '(os_major_version=8)' }
+        let(:request_params) do
+          {
+            'filter' => '(os_major_version=8)'
+          }
+        end
         v2_collection_schema 'system'
 
         after { |e| autogenerate_examples(e, 'List of Systems filtered by "(os_major_version=8)"') }
@@ -52,7 +60,11 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -61,7 +73,11 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -106,7 +122,11 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       parameter name: :system_id, in: :path, type: :string, required: true
 
       response '200', 'Returns a System' do
-        let(:system_id) { item.id }
+        let(:request_params) do
+          {
+            'system_id' => item.id
+          }
+        end
         v2_item_schema('system')
 
         after { |e| autogenerate_examples(e, 'Returns a System') }
@@ -115,7 +135,11 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:system_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'system_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing System') }
@@ -163,6 +187,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       parameter name: :policy_id, in: :path, type: :string, required: true
 
       response '200', 'Lists Systems' do
+        let(:request_params) do
+          {
+            'policy_id' => policy_id
+          }
+        end
+
         v2_collection_schema 'system'
 
         after { |e| autogenerate_examples(e, 'List of Systems') }
@@ -171,7 +201,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Systems assigned to a Policy' do
-        let(:sort_by) { ['os_minor_version'] }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'sort_by' => ['os_minor_version']
+          }
+        end
         v2_collection_schema 'system'
 
         after { |e| autogenerate_examples(e, 'List of Systems sorted by "os_minor_version:asc"') }
@@ -180,7 +215,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Systems assigned to a Policy' do
-        let(:filter) { '(os_minor_version=0)' }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'filter' => '(os_minor_version=0)'
+          }
+        end
         v2_collection_schema 'system'
 
         after { |e| autogenerate_examples(e, 'List of Systems filtered by "(os_minor_version=0)"') }
@@ -189,7 +229,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -198,7 +243,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -218,8 +268,6 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
         )
       end
 
-      let(:data) { { ids: items.map(&:id) } }
-
       v2_auth_header
       tags 'Policies'
       description 'This feature is exclusively used by the frontend'
@@ -233,6 +281,13 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       }
 
       response '202', 'Assigns all specified systems and unassigns the rest' do
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'data' => { ids: items.map(&:id) }
+          }
+        end
+
         v2_collection_schema 'system'
 
         after { |e| autogenerate_examples(e, 'List of assigned Systems') }
@@ -275,6 +330,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       parameter name: :policy_id, in: :path, type: :string, required: true
 
       response '200', 'Lists available OS versions' do
+        let(:request_params) do
+          {
+            'policy_id' => policy_id
+          }
+        end
+
         schema(type: :array, items: { type: 'string' })
 
         after { |e| autogenerate_examples(e, 'List of available OS versions') }
@@ -309,7 +370,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       parameter name: :policy_id, in: :path, type: :string, required: true
 
       response '202', 'Assigns a System to a Policy' do
-        let(:system_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'system_id' => item.id
+          }
+        end
         v2_item_schema('system')
 
         after { |e| autogenerate_examples(e, 'Assigns a System to a Policy') }
@@ -318,7 +384,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:system_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'system_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Assigns a System to a Policy') }
@@ -348,7 +419,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       parameter name: :policy_id, in: :path, type: :string, required: true
 
       response '202', 'Unassigns a System from a Policy' do
-        let(:system_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'system_id' => item.id
+          }
+        end
         v2_item_schema('system')
 
         after { |e| autogenerate_examples(e, 'Unassigns a System from a Policy') }
@@ -357,7 +433,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:system_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'system_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when unassigning a non-existing System') }
@@ -404,6 +485,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       parameter name: :report_id, in: :path, type: :string, required: true
 
       response '200', 'Lists Systems' do
+        let(:request_params) do
+          {
+            'report_id' => report_id
+          }
+        end
+
         v2_collection_schema 'system'
 
         after { |e| autogenerate_examples(e, 'List of Systems') }
@@ -412,7 +499,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Systems assigned to a Report' do
-        let(:sort_by) { ['os_minor_version'] }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'sort_by' => ['os_minor_version']
+          }
+        end
         v2_collection_schema 'system'
 
         after { |e| autogenerate_examples(e, 'List of Systems sorted by "os_minor_version:asc"') }
@@ -421,7 +513,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Systems assigned to a Report' do
-        let(:filter) { '(os_minor_version=0)' }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'filter' => '(os_minor_version=0)'
+          }
+        end
         v2_collection_schema 'system'
 
         after { |e| autogenerate_examples(e, 'List of Systems filtered by "(os_minor_version=0)"') }
@@ -430,7 +527,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -439,7 +541,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -483,6 +590,11 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       parameter name: :report_id, in: :path, type: :string, required: true
 
       response '200', 'Lists available OS versions' do
+        let(:request_params) do
+          {
+            'report_id' => report_id
+          }
+        end
         schema(type: :array, items: { type: 'string' })
 
         after { |e| autogenerate_examples(e, 'List of available OS versions') }
@@ -512,11 +624,16 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       operationId 'ReportSystem'
       content_types
 
-      parameter name: :system_id, in: :path, type: :string, required: true
       parameter name: :report_id, in: :path, type: :string, required: true
+      parameter name: :system_id, in: :path, type: :string, required: true
 
       response '200', 'Returns a System under a Report' do
-        let(:system_id) { item.id }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'system_id' => item.id
+          }
+        end
         v2_item_schema('system')
 
         after { |e| autogenerate_examples(e, 'Returns a System under a Report') }
@@ -525,7 +642,12 @@ describe 'Systems', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:system_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'system_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing System') }

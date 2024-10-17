@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Test Results', swagger_doc: 'v2/openapi.json' do
+describe 'Test Results', openapi_spec: 'v2/openapi.json' do
   let(:user) { FactoryBot.create(:v2_user) }
-  let(:'X-RH-IDENTITY') { user.account.identity_header.raw }
+  let(:request_headers) { { 'X-RH-IDENTITY' => user.account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ) }
 
@@ -46,6 +46,11 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       parameter name: :report_id, in: :path, type: :string, required: true
 
       response '200', 'Lists TestResults' do
+        let(:request_params) do
+          {
+            'report_id' => report_id
+          }
+        end
         v2_collection_schema 'test_result'
 
         after { |e| autogenerate_examples(e, 'List of Test Results') }
@@ -54,7 +59,12 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Test Results under a Report' do
-        let(:sort_by) { ['score'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['score'],
+            'report_id' => report_id
+          }
+        end
         v2_collection_schema 'test_result'
 
         after { |e| autogenerate_examples(e, 'List of Test Results sorted by "score:asc"') }
@@ -63,7 +73,12 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Test Results under a Report' do
-        let(:filter) { '(os_minor_version=8)' }
+        let(:request_params) do
+          {
+            'filter' => '(os_minor_version=8)',
+            'report_id' => report_id
+          }
+        end
         v2_collection_schema 'test_result'
 
         after { |e| autogenerate_examples(e, 'List of Test Results filtered by "(os_minor_version=8)"') }
@@ -72,7 +87,12 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['description'],
+            'report_id' => report_id
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -81,7 +101,12 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'limit' => 103,
+            'report_id' => report_id
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -114,6 +139,12 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       ).id
     end
 
+    let(:request_params) do
+      {
+        'report_id' => report_id
+      }
+    end
+
     get 'Request the list of available OS versions' do
       v2_auth_header
       tags 'Reports'
@@ -126,6 +157,11 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       parameter name: :report_id, in: :path, type: :string, required: true
 
       response '200', 'Lists available OS versions' do
+        let(:request_params) do
+          {
+            'report_id' => report_id
+          }
+        end
         schema(type: :array, items: { type: 'string' })
 
         after { |e| autogenerate_examples(e, 'List of available OS versions') }
@@ -169,6 +205,11 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       parameter name: :report_id, in: :path, type: :string, required: true
 
       response '200', 'Lists available Security Guide versions' do
+        let(:request_params) do
+          {
+            'report_id' => report_id
+          }
+        end
         schema(type: :array, items: { type: 'string' })
 
         after { |e| autogenerate_examples(e, 'List of available Security Guide versions') }
@@ -189,6 +230,12 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       ).id
     end
 
+    let(:request_params) do
+      {
+        'report_id' => report_id
+      }
+    end
+
     let(:item) { FactoryBot.create(:system, account: user.account, policy_id: report_id, with_test_result: true) }
 
     get 'Request a Test Result' do
@@ -202,7 +249,12 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       parameter name: :report_id, in: :path, type: :string, required: true
 
       response '200', 'Returns a Test Result under a Report' do
-        let(:test_result_id) { item.test_results.first.id }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'test_result_id' => item.test_results.first.id
+          }
+        end
         v2_item_schema('system')
 
         after { |e| autogenerate_examples(e, 'Returns a Test Result under a Report') }
@@ -211,7 +263,12 @@ describe 'Test Results', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:test_result_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'test_result_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing Test Result') }

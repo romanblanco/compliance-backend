@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
+describe 'Tailorings', openapi_spec: 'v2/openapi.json' do
   let(:user) { FactoryBot.create(:v2_user) }
-  let(:'X-RH-IDENTITY') { user.account.identity_header.raw }
+  let(:request_headers) { { 'X-RH-IDENTITY' => user.account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ) }
 
@@ -47,6 +47,11 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
       parameter name: :policy_id, in: :path, type: :string, required: true
 
       response '200', 'Lists Tailorings' do
+        let(:request_params) do
+          {
+            'policy_id' => policy_id
+          }
+        end
         v2_collection_schema 'tailoring'
 
         after { |e| autogenerate_examples(e, 'List of Tailorings') }
@@ -55,7 +60,12 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Tailorings' do
-        let(:sort_by) { ['os_minor_version'] }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'sort_by' => ['os_minor_version']
+          }
+        end
         v2_collection_schema 'tailoring'
 
         after { |e| autogenerate_examples(e, 'List of Tailorings sorted by "os_minor_version:asc"') }
@@ -65,7 +75,12 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
 
       response '200', 'Lists Tailorings' do
         let(:version) { V2::Tailoring.first.os_minor_version }
-        let(:filter) { "(os_minor_version=#{version})" }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'filter' => "(os_minor_version=#{version})"
+          }
+        end
         v2_collection_schema 'tailoring'
 
         after { |e| autogenerate_examples(e, "List of Tailorings filtered by '(os_minor_version=#{version})'") }
@@ -74,7 +89,12 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -83,7 +103,12 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -93,14 +118,6 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
     end
 
     post 'Create a Tailoring' do
-      let(:policy_id) do
-        FactoryBot.create(
-          :v2_policy,
-          account: user.account,
-          profile: FactoryBot.create(:v2_profile, ref_id_suffix: 'foo', supports_minors: [1])
-        ).id
-      end
-
       v2_auth_header
       tags 'Policies'
       description 'Create a Tailoring with the provided attributes (for ImageBuilder only)'
@@ -112,7 +129,16 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
       parameter name: :data, in: :body, schema: ref_schema('tailoring_create')
 
       response '201', 'Creates a Tailoring' do
-        let(:data) { { os_minor_version: 1 } }
+        let(:request_params) do
+          {
+            'policy_id' => FactoryBot.create(
+              :v2_policy,
+              account: user.account,
+              profile: FactoryBot.create(:v2_profile, ref_id_suffix: 'foo', supports_minors: [1])
+            ).id,
+            'data' => { os_minor_version: 1 }
+          }
+        end
 
         v2_item_schema('tailoring')
 
@@ -148,7 +174,12 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
                 description: 'UUID or OS minor version number'
 
       response '200', 'Returns a Tailoring' do
-        let(:tailoring_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => item.id
+          }
+        end
         v2_item_schema('tailoring')
 
         after { |e| autogenerate_examples(e, 'Returns a Tailoring') }
@@ -157,8 +188,12 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:tailoring_id) { Faker::Internet.uuid }
-        let(:policy_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'policy_id' => Faker::Internet.uuid,
+            'tailoring_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing Tailoring') }
@@ -179,14 +214,17 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
                 description: 'UUID or OS minor version number'
       parameter name: :data, in: :body, schema: ref_schema('tailoring')
 
-      let(:data) do
-        {
-          value_overrides: { FactoryBot.create(:v2_value_definition, security_guide: item.security_guide).id => '123' }
-        }
-      end
-
       response '202', 'Updates a Tailoring' do
-        let(:tailoring_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => item.id,
+            'data' => {
+              value_overrides: { FactoryBot.create(:v2_value_definition,
+                                                   security_guide: item.security_guide).id => '123' }
+            }
+          }
+        end
         v2_item_schema('tailoring')
 
         after { |e| autogenerate_examples(e, 'Returns the updated Tailoring') }
@@ -221,7 +259,12 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
       parameter name: :tailoring_id, in: :path, type: :string, required: true
 
       response '200', 'Returns the Rule Tree of a Tailoring' do
-        let(:tailoring_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => item.id
+          }
+        end
         schema ref_schema('rule_tree')
 
         after { |e| autogenerate_examples(e, 'Returns the Rule Tree of a Tailoring') }
@@ -230,7 +273,12 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:tailoring_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing Tailoring') }
@@ -269,7 +317,12 @@ describe 'Tailorings', swagger_doc: 'v2/openapi.json' do
                 description: 'UUID or OS minor version number'
 
       response '200', 'Returns a Tailoring File' do
-        let(:tailoring_id) { item.id }
+        let(:request_params) do
+          {
+            'policy_id' => policy_id,
+            'tailoring_id' => item.id
+          }
+        end
         schema ref_schema('tailoring_file')
 
         after { |e| autogenerate_examples(e, 'Returns a Tailoring File') }

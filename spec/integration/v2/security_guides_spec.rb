@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
-  let(:'X-RH-IDENTITY') { FactoryBot.create(:v2_user).account.identity_header.raw }
+describe 'Security Guides', openapi_spec: 'v2/openapi.json' do
+  let(:request_headers) { { 'X-RH-IDENTITY' => FactoryBot.create(:v2_user).account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ) }
 
@@ -30,7 +30,11 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Security Guides' do
-        let(:sort_by) { ['os_major_version'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['os_major_version']
+          }
+        end
         v2_collection_schema 'security_guide'
 
         after { |e| autogenerate_examples(e, 'List of Security Guides sorted by "os_major_version:asc"') }
@@ -39,7 +43,11 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Security Guides' do
-        let(:filter) { '(os_major_version=8)' }
+        let(:request_params) do
+          {
+            'filter' => '(os_major_version=8)'
+          }
+        end
         v2_collection_schema 'security_guide'
 
         after { |e| autogenerate_examples(e, 'List of Security Guides filtered by "(os_major_version=8)"') }
@@ -48,7 +56,11 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -57,7 +69,11 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }
@@ -102,7 +118,11 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       parameter name: :security_guide_id, in: :path, type: :string, required: true
 
       response '200', 'Returns a Security Guide' do
-        let(:security_guide_id) { item.id }
+        let(:request_params) do
+          {
+            'security_guide_id' => item.id
+          }
+        end
         v2_item_schema('security_guide')
 
         after { |e| autogenerate_examples(e, 'Returns a Security Guide') }
@@ -111,7 +131,11 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:security_guide_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'security_guide_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing Security Guide') }
@@ -135,7 +159,11 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       parameter name: :security_guide_id, in: :path, type: :string, required: true
 
       response '200', 'Returns the Rule Tree of a Security Guide' do
-        let(:security_guide_id) { item.id }
+        let(:request_params) do
+          {
+            'security_guide_id' => item.id
+          }
+        end
         schema ref_schema('rule_tree')
 
         after { |e| autogenerate_examples(e, 'Returns the Rule Tree of a Security Guide') }
@@ -144,7 +172,11 @@ describe 'Security Guides', swagger_doc: 'v2/openapi.json' do
       end
 
       response '404', 'Returns with Not Found' do
-        let(:security_guide_id) { Faker::Internet.uuid }
+        let(:request_params) do
+          {
+            'security_guide_id' => Faker::Internet.uuid
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting a non-existing Security Guide') }

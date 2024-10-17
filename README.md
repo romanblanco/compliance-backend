@@ -218,7 +218,7 @@ If there is a `tags` column defined in any model, it always should be a `jsonb` 
 ## API documentation
 
 The API documentation can be found at `/api/compliance` and you may access the raw OpenAPI
-definition [here](https://github.com/RedHatInsights/compliance-backend/blob/master/swagger/v2/openapi.json).
+definition [here](https://github.com/RedHatInsights/compliance-backend/blob/master/openapi/v2/openapi.json).
 Docs can be updated by running:
 ```shell
 rake rswag:specs:swaggerize

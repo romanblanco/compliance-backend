@@ -10,9 +10,9 @@ require './spec/api/v2/openapi'
 include Api::V1::Schemas::Util # rubocop:disable Style/MixinUsage
 
 RSpec.configure do |config|
-  config.openapi_root = Rails.root.to_s + '/swagger'
+  config.openapi_root = Rails.root.to_s + '/openapi'
   # FIXME: https://github.com/rswag/rswag/issues/666
-  # config.swagger_strict_schema_validation = true
+  # config.openapi_strict_schema_validation = true
   config.before(:each) do
     stub_request(:get, /#{Settings.endpoints.rbac_url}/)
       .to_return(status: 200,
@@ -86,39 +86,39 @@ end
 # rubocop:enable Metrics/MethodLength
 
 def include_param
-  parameter name: :include, in: :query, required: false,
+  parameter name: 'include', in: :query, required: false,
             schema: { type: :string },
             description: 'A comma seperated list of resources to include in ' \
                          'the response'
 end
 
 def pagination_params
-  parameter name: :limit, in: :query, required: false,
+  parameter name: 'limit', in: :query, required: false,
             description: 'The number of items to return',
             schema: { type: :integer, maximum: 100, minimum: 1, default: 10 }
-  parameter name: :offset, in: :query, required: false,
+  parameter name: 'offset', in: :query, required: false,
             description: 'The number of items to skip before starting ' \
             'to collect the result set',
             schema: { type: :integer, minimum: 1, default: 1 }
 end
 
 def pagination_params_v2
-  parameter name: :limit, in: :query, required: false,
+  parameter name: 'limit', in: :query, required: false,
             description: 'Number of items to return per page',
             schema: { type: :number, maximum: 100, minimum: 1, default: 10 }
-  parameter name: :offset, in: :query, required: false,
+  parameter name: 'offset', in: :query, required: false,
             description: 'Offset of first item of paginated response',
             schema: { type: :integer, minimum: 0, default: 0 }
 end
 
 def ids_only_param
-  parameter name: :ids_only, in: :query, required: false,
+  parameter name: 'ids_only', in: :query, required: false,
             description: 'Indicates whether to return only resource IDs.',
             schema: { type: :boolean }
 end
 
 def search_params
-  parameter name: :search, in: :query, required: false,
+  parameter name: 'search', in: :query, required: false,
             description: 'Query string compliant with scoped_search ' \
             'query language: ' \
             'https://github.com/wvanbergen/scoped_search/wiki/Query-language',
@@ -140,7 +140,7 @@ def search_params_v2(model = nil, except: [])
 end
 
 def tags_params
-  parameter name: :tags, in: :query, required: false,
+  parameter name: 'tags', in: :query, required: false,
             description: 'An array of tags to narrow down the search results. ' \
             'In case the value contains symbols used for separators (`/` or `=`), they need to be encoded.<br>' \
             'e.g.: `namespace/key=value`, `insights-client/selinux-config=SELINUX%3Denforcing`',
@@ -148,7 +148,7 @@ def tags_params
 end
 
 def sort_params(model = nil)
-  parameter name: :sort_by, in: :query, required: false,
+  parameter name: 'sort_by', in: :query, required: false,
             description: 'A string or an array of fields with an optional direction ' \
              '(:asc or :desc) to sort the results.',
             schema: {
@@ -158,7 +158,7 @@ def sort_params(model = nil)
 end
 
 def sort_params_v2(model = nil, except: [])
-  parameter name: :sort_by, in: :query, required: false,
+  parameter name: 'sort_by', in: :query, required: false,
             description: 'Attribute and direction to sort the items by. ' \
               'Represented by an array of fields with an optional direction ' \
               '(`<key>:asc` or `<key>:desc`).<br><br>' \
@@ -216,9 +216,9 @@ def content_types
 end
 
 def auth_header
-  parameter name: :'X-RH-IDENTITY', in: :header, schema: { type: :string }
+  parameter name: 'X-RH-IDENTITY', in: :header, schema: { type: :string }
 end
 
 def v2_auth_header
-  parameter name: :'X-RH-IDENTITY', in: :header, schema: { type: :string }, description: 'For internal use only'
+  parameter name: 'X-RH-IDENTITY', in: :header, schema: { type: :string }, description: 'For internal use only'
 end

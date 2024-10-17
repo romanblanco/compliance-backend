@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Systems API', swagger_doc: 'v1/openapi.json' do
+describe 'Systems API', openapi_spec: 'v1/openapi.json' do
   before do
     allow_any_instance_of(PolicyHost).to receive(:host_supported?).and_return true
     @account = FactoryBot.create(:account)
@@ -42,9 +42,13 @@ describe 'Systems API', swagger_doc: 'v1/openapi.json' do
       include_param
 
       response '200', 'lists all hosts requested' do
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
+        let(:request_params) do
+          {
+            'tags' => ['foo/bar=baz']
+          }
+        end
         let(:include) { '' } # work around buggy rswag
-        let(:tags) { ['foo/bar=baz'] }
         schema type: :object,
                properties: {
                  meta: ref_schema('metadata'),
@@ -78,20 +82,28 @@ describe 'Systems API', swagger_doc: 'v1/openapi.json' do
       content_types
       auth_header
 
-      parameter name: :id, in: :path, type: :string
+      parameter name: 'id', in: :path, type: :string
       include_param
 
       response '404', 'system not found' do
-        let(:id) { 'invalid' }
-        let(:'X-RH-IDENTITY') { encoded_header }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header } }
+        let(:request_params) do
+          {
+            'id' => 'invalid'
+          }
+        end
         let(:include) { '' } # work around buggy rswag
         after { |e| autogenerate_examples(e) }
         run_test!
       end
 
       response '200', 'retrieves a system' do
-        let(:'X-RH-IDENTITY') { encoded_header(@account) }
-        let(:id) { @host.id }
+        let(:request_headers) { { 'X-RH-IDENTITY' => encoded_header(@account) } }
+        let(:request_params) do
+          {
+            'id' => @host.id
+          }
+        end
         let(:include) { '' } # work around buggy rswag
         schema type: :object,
                properties: {

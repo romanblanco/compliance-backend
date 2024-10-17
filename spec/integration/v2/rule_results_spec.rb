@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Rule Results', swagger_doc: 'v2/openapi.json' do
+describe 'Rule Results', openapi_spec: 'v2/openapi.json' do
   let(:user) { FactoryBot.create(:v2_user) }
-  let(:'X-RH-IDENTITY') { user.account.identity_header.raw }
+  let(:request_headers) { { 'X-RH-IDENTITY' => user.account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ) }
 
@@ -41,10 +41,16 @@ describe 'Rule Results', swagger_doc: 'v2/openapi.json' do
       sort_params_v2(V2::RuleResult)
       search_params_v2(V2::RuleResult, except: %i[remediation_available])
 
-      parameter name: :test_result_id, in: :path, type: :string, required: true
       parameter name: :report_id, in: :path, type: :string, required: true
+      parameter name: :test_result_id, in: :path, type: :string, required: true
 
       response '200', 'Lists RuleResults' do
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'test_result_id' => test_result_id
+          }
+        end
         v2_collection_schema 'rule_result'
 
         after { |e| autogenerate_examples(e, 'List of Rule Results') }
@@ -53,7 +59,13 @@ describe 'Rule Results', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Rule Results under a Report' do
-        let(:sort_by) { ['result'] }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'test_result_id' => test_result_id,
+            'sort_by' => ['result']
+          }
+        end
         v2_collection_schema 'rule_result'
 
         after { |e| autogenerate_examples(e, 'List of Rule Results sorted by "result:asc"') }
@@ -62,7 +74,13 @@ describe 'Rule Results', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Rule Results under a Report' do
-        let(:filter) { '(title=foo)' }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'test_result_id' => test_result_id,
+            'filter' => '(title=foo)'
+          }
+        end
         v2_collection_schema 'rule_result'
 
         after { |e| autogenerate_examples(e, 'List of Rule Results filtered by "(title=foo)"') }
@@ -71,7 +89,13 @@ describe 'Rule Results', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'test_result_id' => test_result_id,
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -80,7 +104,13 @@ describe 'Rule Results', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'report_id' => report_id,
+            'test_result_id' => test_result_id,
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }

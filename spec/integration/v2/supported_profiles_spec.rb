@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'swagger_helper'
+require 'openapi_helper'
 
-describe 'Supported Profiles', swagger_doc: 'v2/openapi.json' do
-  let(:'X-RH-IDENTITY') { FactoryBot.create(:v2_user).account.identity_header.raw }
+describe 'Supported Profiles', openapi_spec: 'v2/openapi.json' do
+  let(:request_headers) { { 'X-RH-IDENTITY' => FactoryBot.create(:v2_user).account.identity_header.raw } }
 
   before { stub_rbac_permissions(Rbac::COMPLIANCE_ADMIN, Rbac::INVENTORY_HOSTS_READ) }
 
@@ -30,7 +30,11 @@ describe 'Supported Profiles', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Supported Profiles' do
-        let(:sort_by) { ['os_major_version'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['os_major_version']
+          }
+        end
         v2_collection_schema 'supported_profile'
 
         after { |e| autogenerate_examples(e, 'List of Supported Profiles sorted by "os_major_version:asc"') }
@@ -39,7 +43,11 @@ describe 'Supported Profiles', swagger_doc: 'v2/openapi.json' do
       end
 
       response '200', 'Lists Supported Profiles' do
-        let(:filter) { '(os_major_version=8)' }
+        let(:request_params) do
+          {
+            'filter' => '(os_major_version=8)'
+          }
+        end
         v2_collection_schema 'supported_profile'
 
         after { |e| autogenerate_examples(e, 'List of Supported Profiles filtered by "(os_major_version=8)"') }
@@ -48,7 +56,11 @@ describe 'Supported Profiles', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:sort_by) { ['description'] }
+        let(:request_params) do
+          {
+            'sort_by' => ['description']
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when sorting by incorrect parameter') }
@@ -57,7 +69,11 @@ describe 'Supported Profiles', swagger_doc: 'v2/openapi.json' do
       end
 
       response '422', 'Returns with Unprocessable Content' do
-        let(:limit) { 103 }
+        let(:request_params) do
+          {
+            'limit' => 103
+          }
+        end
         schema ref_schema('errors')
 
         after { |e| autogenerate_examples(e, 'Description of an error when requesting higher limit than supported') }

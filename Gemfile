@@ -114,7 +114,7 @@ group :development, :test do
   gem 'pry-byebug'
   gem 'pry-remote'
   gem 'rspec-rails'
-  gem 'rswag-specs'
+  gem 'rswag-specs', git: 'https://github.com/romanblanco/rswag.git', branch: 'merge-master-v3'
   gem 'rubocop', require: false
   gem 'rubocop-rails', require: false
   gem 'shoulda-context'

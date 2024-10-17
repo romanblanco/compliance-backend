@@ -1,3 +1,14 @@
+GIT
+  remote: https://github.com/romanblanco/rswag.git
+  revision: 3c7e1896cc65f0459b3057bc4005928cf0e4415b
+  branch: merge-master-v3
+  specs:
+    rswag-specs (0.0.0)
+      activesupport (>= 5.2, < 8.1)
+      json-schema (>= 2.2, < 6.0)
+      railties (>= 5.2, < 8.1)
+      rspec-core (>= 3.12)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -345,11 +356,6 @@ GEM
     rswag-api (2.16.0)
       activesupport (>= 5.2, < 8.1)
       railties (>= 5.2, < 8.1)
-    rswag-specs (2.16.0)
-      activesupport (>= 5.2, < 8.1)
-      json-schema (>= 2.2, < 6.0)
-      railties (>= 5.2, < 8.1)
-      rspec-core (>= 2.14)
     rswag-ui (2.16.0)
       actionpack (>= 5.2, < 8.1)
       railties (>= 5.2, < 8.1)
@@ -506,7 +512,7 @@ DEPENDENCIES
   rexml
   rspec-rails
   rswag-api
-  rswag-specs
+  rswag-specs!
   rswag-ui
   rubocop
   rubocop-rails
