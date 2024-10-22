@@ -314,10 +314,6 @@ GEM
     rb-inotify (0.11.1)
       ffi (~> 1.0)
     rb_sys (0.9.97)
-    rdkafka (0.13.0)
-      ffi (~> 1.15)
-      mini_portile2 (~> 2.6)
-      rake (> 12)
     rdoc (6.7.0)
       psych (>= 4.0.0)
     redis (4.8.1)
@@ -514,7 +510,6 @@ DEPENDENCIES
   rack (>= 2.1.4)
   rack-cors
   rails (~> 7.0)
-  rdkafka
   redis (~> 4.5)
   request_store
   rexml
