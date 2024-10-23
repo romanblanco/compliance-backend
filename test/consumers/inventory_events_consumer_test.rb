@@ -6,24 +6,24 @@ require 'sidekiq/testing'
 class InventoryEventsConsumerTest < ActiveSupport::TestCase
   setup do
     Settings.kafka.topics.upload_compliance = 'validation'
-    @message = stub(message: nil)
+    @msg_value = stub(msg_value: nil)
     @consumer = InventoryEventsConsumer.new
     DeleteHost.clear
   end
 
-  test 'if message is delete, host is enqueued for deletion' do
-    @message.expects(:value).returns(
+  test 'if msg_value is delete, host is enqueued for deletion' do
+    @msg_value.expects(:value).returns(
       '{"type": "delete", ' \
       '"id": "fe314be5-4091-412d-85f6-00cc68fc001b", ' \
       '"timestamp": "2019-05-13 21:18:15.797921"}'
     ).at_least_once
     assert_audited_success('Enqueued DeleteHost job for host fe314be5-4091-412d-85f6-00cc68fc001b')
-    @consumer.process(@message)
+    @consumer.consume_one
     assert_equal 1, DeleteHost.jobs.size
   end
 
-  test 'if message is delete, and enqueue for deletion fails' do
-    @message.expects(:value).returns(
+  test 'if msg_value is delete, and enqueue for deletion fails' do
+    @msg_value.expects(:value).returns(
       '{"type": "delete", ' \
       '"id": "fe314be5-4091-412d-85f6-00cc68fc001b", ' \
       '"timestamp": "2019-05-13 21:18:15.797921"}'
@@ -31,17 +31,17 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
     DeleteHost.stubs(:perform_async).raises(:StandardError)
     assert_raises StandardError do
       assert_audited_fail 'Failed to enqueue DeleteHost job for host fe314be5-4091-412d-85f6-00cc68fc001b:'
-      @consumer.process(@message)
+      @consumer.consume_one
     end
   end
 
-  test 'if message is not known, no job is enqueued' do
-    @message.expects(:value).returns(
+  test 'if msg_value is not known, no job is enqueued' do
+    @msg_value.expects(:value).returns(
       '{"type": "somethingelse", ' \
       '"id": "fe314be5-4091-412d-85f6-00cc68fc001b", ' \
       '"timestamp": "2019-05-13 21:18:15.797921"}'
     ).at_least_once
-    @consumer.process(@message)
+    @consumer.consume_one
     assert_equal 0, DeleteHost.jobs.size
   end
 
@@ -82,7 +82,7 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
     end
   end
 
-  context 'report upload messages' do
+  context 'report upload msg_values' do
     setup do
       ParseReportJob.clear
       SafeDownloader.stubs(:download_reports).returns(['report'])
@@ -90,8 +90,8 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
       @host = Host.find(FactoryBot.create(:host, id: '37f7eeff-831b-5c41-984a-254965f58c0f', org_id: '1234').id)
     end
 
-    should 'not leak memory to subsequent messages' do
-      @message.stubs(:value).returns({
+    should 'not leak memory to subsequent msg_values' do
+      @msg_value.stubs(:value).returns({
         host: {
           id: @host.id
         },
@@ -105,7 +105,7 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
       @consumer.stubs(:validated_reports).returns([%w[profile report]])
       @consumer.stubs(:produce)
 
-      @consumer.process(@message)
+      @consumer.consume_one
 
       assert_equal 1, ParseReportJob.jobs.size
       assert_nil @consumer.instance_variable_get(:@report_contents)
@@ -113,7 +113,7 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
     end
 
     should 'should queue a ParseReportJob' do
-      @message.stubs(:value).returns({
+      @msg_value.stubs(:value).returns({
         host: {
           id: @host.id
         },
@@ -135,12 +135,12 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
       )
 
       assert_audited_success 'Enqueued report parsing of profileid'
-      @consumer.process(@message)
+      @consumer.consume_one
       assert_equal 1, ParseReportJob.jobs.size
     end
 
     should 'pass ssl_only to reports downloader' do
-      @message.stubs(:value).returns({
+      @msg_value.stubs(:value).returns({
         host: {
           id: @host.id
         },
@@ -160,11 +160,11 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
                     .with do |_url, opts|
         opts[:ssl_only] == true
       end
-      @consumer.process(@message)
+      @consumer.consume_one
     end
 
     should 'emit notification when download fails' do
-      @message.stubs(:value).returns({
+      @msg_value.stubs(:value).returns({
         host: {
           id: @host.id
         },
@@ -193,12 +193,12 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
       )
 
       assert_audited_fail 'Failed to dowload report'
-      @consumer.process(@message)
+      @consumer.consume_one
       assert_equal 0, ParseReportJob.jobs.size
     end
 
     should 'not emit notification when host was deleted' do
-      @message.stubs(:value).returns({
+      @msg_value.stubs(:value).returns({
         host: {
           id: 'abcdef'
         },
@@ -224,12 +224,12 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
       )
 
       assert_audited_fail 'Failed to dowload report'
-      @consumer.process(@message)
+      @consumer.consume_one
       assert_equal 0, ParseReportJob.jobs.size
     end
 
     should 'not parse reports when validation fails' do
-      @message.stubs(:value).returns({
+      @msg_value.stubs(:value).returns({
         host: {
           id: @host.id
         },
@@ -258,13 +258,13 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
       )
 
       assert_audited_fail 'Invalid Report'
-      @consumer.process(@message)
+      @consumer.consume_one
       assert_equal 0, ParseReportJob.jobs.size
     end
 
     should 'not parse reports if the entitlement check fails' do
       Insights::Api::Common::IdentityHeader.stubs(:new).returns(OpenStruct.new(valid?: false))
-      @message.stubs(:value).returns({
+      @msg_value.stubs(:value).returns({
         host: {
           id: '37f7eeff-831b-5c41-984a-254965f58c0f'
         },
@@ -293,12 +293,12 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
       )
 
       assert_audited_fail 'Rejected report'
-      @consumer.process(@message)
+      @consumer.consume_one
       assert_equal 0, ParseReportJob.jobs.size
     end
 
     should 'notify payload tracker when a report is received' do
-      @message.stubs(:value).returns({
+      @msg_value.stubs(:value).returns({
         host: {
           id: @host.id
         },
@@ -326,11 +326,11 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
       )
 
       assert_audited_success 'Enqueued report parsing of profileid'
-      @consumer.process(@message)
+      @consumer.consume_one
     end
 
     should 'handle db errors and db clear connections' do
-      @message.stubs(:value).returns({
+      @msg_value.stubs(:value).returns({
         host: {
           id: @host.id
         },
@@ -346,13 +346,13 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
 
       ActiveRecord::Base.expects(:clear_active_connections!)
       assert_raises ActiveRecord::StatementInvalid do
-        @consumer.process(@message)
+        @consumer.consume_one
       end
       assert_equal 0, ParseReportJob.jobs.size
     end
 
     should 'handle redis connection problems' do
-      @message.stubs(:value).returns({
+      @msg_value.stubs(:value).returns({
         host: {
           id: @host.id
         },
@@ -367,7 +367,7 @@ class InventoryEventsConsumerTest < ActiveSupport::TestCase
       @consumer.stubs(:dispatch).raises(Redis::CannotConnectError)
 
       assert_raises Redis::CannotConnectError do
-        @consumer.process(@message)
+        @consumer.consume_one
       end
     end
   end

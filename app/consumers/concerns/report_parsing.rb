@@ -89,6 +89,7 @@ module ReportParsing
     end
 
     def service
+      puts @msg_value
       @msg_value.dig('platform_metadata', 'service')
     end
 
