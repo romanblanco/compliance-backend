@@ -2,8 +2,8 @@
 
 class KarafkaApp < Karafka::App
   setup do |config|
-    config.kafka = { 'bootstrap.servers': '127.0.0.1:9092' }
-    config.client_id = 'example_app'
+    config.kafka = { 'bootstrap.servers': Settings.kafka.brokers }
+    config.client_id = 'compliance_backend'
     # Recreate consumers with each batch. This will allow Rails code reload to work in the
     # development mode. Otherwise Karafka process would not be aware of code changes
     config.consumer_persistence = !Rails.env.development?
@@ -59,13 +59,18 @@ class KarafkaApp < Karafka::App
     # Uncomment this if you use Karafka with ActiveJob
     # You need to define the topic per each queue name you use
     # active_job_topic :default
-    topic :example do
-      # Uncomment this if you want Karafka to manage your topics configuration
-      # Managing topics configuration via routing will allow you to ensure config consistency
-      # across multiple environments
-      #
-      # config(partitions: 2, 'cleanup.policy': 'compact')
-      consumer ExampleConsumer
+    puts "\n\u001b[31;1m◉\u001b[0m karafka.rb"
+    puts "Settings.kafka.topics: #{Settings.kafka.topics.each { |_, name| name.to_sym }}"
+    puts "-" * 40
+    Settings.kafka.topics.each do |_, topic_name|
+      topic topic_name.to_sym do
+        # Uncomment this if you want Karafka to manage your topics configuration
+        # Managing topics configuration via routing will allow you to ensure config consistency
+        # across multiple environments
+        #
+        # config(partitions: 2, 'cleanup.policy': 'compact')
+        consumer InventoryEventsConsumer
+      end
     end
   end
 end

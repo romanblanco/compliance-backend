@@ -3,14 +3,12 @@
 # Receives messages from the Kafka topic, converts them into jobs
 # for processing
 class InventoryEventsConsumer < ApplicationConsumer
-  subscribes_to Settings.kafka.topics.inventory_events
-
   # Raise an error with a cause if a report isn't valid
   class ReportValidationError < StandardError; end
 
   include ReportParsing
 
-  def process(message)
+  def consume_one
     super
 
     dispatch
@@ -23,7 +21,8 @@ class InventoryEventsConsumer < ApplicationConsumer
   end
 
   def dispatch
-    if service == 'compliance'
+    # binding.pry
+    if false # service == 'compliance'
       handle_report_parsing
     elsif @msg_value['type'] == 'delete'
       handle_host_delete
