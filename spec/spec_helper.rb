@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 if Rails.env.test?
+  require 'karafka/testing/rspec/helpers'
   require 'simplecov'
 
   if ENV['GITHUB_ACTIONS']
@@ -10,6 +11,7 @@ if Rails.env.test?
   end
 
   RSpec.configure do |config|
+    config.include Karafka::Testing::RSpec::Helpers
     config.expect_with :rspec do |expectations|
       expectations.include_chain_clauses_in_custom_matcher_descriptions = true
       expectations.max_formatted_output_length = nil
@@ -83,3 +85,4 @@ if Rails.env.test?
     response.parsed_body['data']
   end
 end
+
