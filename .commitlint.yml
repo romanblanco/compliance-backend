@@ -27,3 +27,22 @@ rules:
       - revert
       - style
       - test
+  scope-enum:
+    - 2
+    - always
+    -
+      - Dockerfile
+      - clowder
+      - RBAC
+      - deps
+      - Konflux
+      - APIv2
+      - OpenAPI
+      - logging
+      - metrics
+      - floorist
+      - Redis
+      - DB
+      - SSG
+      - Tailoring
+      - README
