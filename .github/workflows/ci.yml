@@ -143,6 +143,8 @@ jobs:
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
         version: v10.0.1
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Run minitest tests
       env:
         HOSTNAME: rails
@@ -161,6 +163,8 @@ jobs:
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
         version: v10.0.1
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   migration-robustness:
     runs-on: ubuntu-latest
     services:
