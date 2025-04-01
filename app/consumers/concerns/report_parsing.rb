@@ -81,19 +81,19 @@ module ReportParsing
     end
 
     def id
-      @message.dig('host', 'id')
+      @msg_value.dig('host', 'id')
     end
 
     def service
-      @message.dig('platform_metadata', 'service')
+      @msg_value.dig('platform_metadata', 'service')
     end
 
     def url
-      @message.dig('platform_metadata', 'url')
+      @msg_value.dig('platform_metadata', 'url')
     end
 
     def metadata
-      (@message.dig('platform_metadata', 'metadata') || {}).merge(
+      (@msg_value.dig('platform_metadata', 'metadata') || {}).merge(
         'id' => id,
         'b64_identity' => b64_identity,
         'url' => url,
@@ -103,11 +103,11 @@ module ReportParsing
     end
 
     def request_id
-      @message.dig('platform_metadata', 'request_id')
+      @msg_value.dig('platform_metadata', 'request_id')
     end
 
     def b64_identity
-      @message.dig('platform_metadata', 'b64_identity')
+      @msg_value.dig('platform_metadata', 'b64_identity')
     end
 
     def report_contents

@@ -196,6 +196,7 @@ GEM
     karafka-testing (2.4.6)
       karafka (>= 2.4.0, < 2.5.0)
       waterdrop (>= 2.7.0)
+    king_konf (1.0.1)
     language_server-protocol (3.17.0.3)
     listen (3.9.0)
       rb-fsevent (~> 0.10, >= 0.10.3)
@@ -278,6 +279,9 @@ GEM
     pundit (2.4.0)
       activesupport (>= 3.0.0)
     racc (1.8.1)
+    racecar (2.12.0)
+      king_konf (~> 1.0.0)
+      rdkafka (>= 0.15.0)
     rack (2.2.13)
     rack-cors (2.0.2)
       rack (>= 2.0.0)
@@ -323,6 +327,10 @@ GEM
     rb-inotify (0.11.1)
       ffi (~> 1.0)
     rb_sys (0.9.103)
+    rdkafka (0.21.0)
+      ffi (~> 1.15)
+      mini_portile2 (~> 2.6)
+      rake (> 12)
     rdoc (6.9.0)
       psych (>= 4.0.0)
     redis (4.8.1)
@@ -513,9 +521,11 @@ DEPENDENCIES
   pry-remote
   puma (~> 6)
   pundit
+  racecar (>= 2.12)
   rack (>= 2.1.4)
   rack-cors
   rails (~> 8.0)
+  rdkafka
   redis (~> 4.5)
   request_store
   rexml

@@ -10,6 +10,8 @@ fi
 if [ "$APPLICATION_TYPE" = "compliance-backend" ]; then
   exec bundle exec puma
 elif [ "$APPLICATION_TYPE" = "compliance-inventory" ]; then
+  exec bundle exec racecar InventoryEventsConsumer
+elif [ "$APPLICATION_TYPE" = "compliance-consumer" ]; then
   exec bundle exec karafka server
 elif [ "$APPLICATION_TYPE" = "compliance-sidekiq" ]; then
   exec bundle exec sidekiq

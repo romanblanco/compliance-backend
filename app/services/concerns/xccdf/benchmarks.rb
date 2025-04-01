@@ -38,6 +38,12 @@ module Xccdf
 
       def package_name
         @package_name ||= begin
+          # FIXME: remove before creating PR
+          puts "\n\u001b[31;1m◉\u001b[0m app/services/concerns/xccdf/benchmarks.rb"
+          puts "benchmark.os_major_version: #{benchmark.os_major_version}"
+          puts "SupportedSsg.by_os_major.keys: #{SupportedSsg.by_os_major.keys}"
+          puts "-" * 40
+
           SupportedSsg.by_os_major[benchmark.os_major_version].find do |item|
             item.version == benchmark.version
           end&.package

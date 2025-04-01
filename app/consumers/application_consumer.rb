@@ -1,19 +1,12 @@
 # frozen_string_literal: true
 
-# Parent class for all Karafka consumers, contains general logic
-class ApplicationConsumer < Karafka::BaseConsumer
-  attr_reader :message
+require 'racecar/consumer'
 
-  def consume(messages)
-    messages.each do |message|
-      @message = JSON.parse(message.raw_payload)
-
-      consume_one
-
-      logger.info "Received message, enqueueing: #{@message}"
-
-      mark_as_consumed(message)
-    end
+# Parent class for all Racecar consumers, contains general logic
+class ApplicationConsumer < Racecar::Consumer
+  def process(message)
+    @msg_value = JSON.parse(message.value)
+    logger.info "Received message, enqueueing: #{@msg_value}"
   end
 
   protected
