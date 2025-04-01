@@ -25,8 +25,8 @@ The Insights Compliance backend comprises of these components/services:
 
 * Rails web server — serving REST API (port 3000)
 * Sidekiq — job runner connected through Redis (see [app/jobs](app/jobs))
-* Inventory Consumer (karafka) — processor of Kafka messages,
-  mainly to process and parse reports
+* Inventory Consumer (racecar) — processor of Kafka messages, mainly to process and parse reports
+* Compliance Consumer (karafka) — processor of Kafka messages, mainly to process Image Builder images
 
 ### Dependent Services
 

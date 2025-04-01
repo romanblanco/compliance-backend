@@ -320,6 +320,75 @@ objects:
           requests:
             cpu: ${CPU_REQUEST_SERVICE}
             memory: ${MEMORY_REQUEST_SERVICE}
+    - name: compliance-consumer
+      # TODO: check requirement for RDS CA and Kafka Cert with Clowder
+      minReplicas: ${{REPLICAS_CONSUMER}}
+      deploymentStrategy:
+        privateStrategy: Recreate
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        initContainers:
+        - command: ["/bin/sh"]
+          args: ["-c", "$HOME/scripts/check_migration_status_and_ssg_synced.sh"]
+          inheritEnv: true
+        env:
+        - name: APPLICATION_TYPE
+          value: compliance-consumer
+        - name: RAILS_ENV
+          value: "${RAILS_ENV}"
+        - name: RAILS_LOG_TO_STDOUT
+          value: "${RAILS_LOG_TO_STDOUT}"
+        - name: PATH_PREFIX
+          value: "${PATH_PREFIX}"
+        - name: APP_NAME
+          value: "${APP_NAME}"
+        - name: MALLOC_ARENA_MAX
+          value: '2'
+        - name: RUBY_YJIT_ENABLE
+          value: "${RUBY_YJIT_ENABLE}"
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: compliance-backend
+              key: secret_key_base
+        - name: SETTINGS__SLACK_WEBHOOK
+          valueFrom:
+            secretKeyRef:
+              name: compliance-backend
+              key: slack_webhook
+              optional: true
+        - name: SETTINGS__REPORT_DOWNLOAD_SSL_ONLY
+          value: ${SETTINGS__REPORT_DOWNLOAD_SSL_ONLY}
+        - name: MAX_INIT_TIMEOUT_SECONDS
+          value: "${MAX_INIT_TIMEOUT_SECONDS}"
+        - name: IMAGE_TAG
+          value: "${IMAGE}:${IMAGE_TAG}"
+        - name: QE_ACCOUNTS
+          value: "${QE_ACCOUNTS}"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: LOGSTREAM
+          value: "${LOGSTREAM_CONSUMER}"
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: metrics
+          timeoutSeconds: 5
+          periodSeconds: 30
+        readinessProbe:
+          timeoutSeconds: 15
+          periodSeconds: 30
+          exec:
+            command: ["bash", "-c", "bundle exec rake --trace db:status redis:status kafka:status"]
+        resources:
+          limits:
+            cpu: ${CPU_LIMIT_CONSUMER}
+            memory: ${MEMORY_LIMIT_CONSUMER}
+          requests:
+            cpu: ${CPU_REQUEST_CONSUMER}
+            memory: ${MEMORY_REQUEST_CONSUMER}
     - name: inventory-consumer
       # TODO: check requirement for RDS CA and Kafka Cert with Clowder
       minReplicas: ${{REPLICAS_CONSUMER}}
@@ -639,7 +708,7 @@ parameters:
   value: latest
 - name: IMAGE
   description: Image name
-  value: quay.io/cloudservices/compliance-backend
+  value: quay.io/rblanco/compliance-backend
 - name: ENV_NAME
   description: ClowdEnv Name
 - name: REPLICAS_BACKEND
