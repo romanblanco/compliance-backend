@@ -4,13 +4,12 @@
 class ApplicationConsumer < Karafka::BaseConsumer
   attr_reader :message
 
-  def consume(messages)
+  def consume
     messages.each do |message|
-      @message = JSON.parse(message.raw_payload)
+      @message = message
 
+      logger.info "Received message"
       consume_one
-
-      logger.info "Received message, enqueueing: #{@message}"
 
       mark_as_consumed(message)
     end
