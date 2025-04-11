@@ -44,7 +44,7 @@ module ParseReport
   end
 
   def url
-    message.payload.dig('platform_metadata', 'url')
+    metadata.dig('url')
   end
 
   def parse(raw)
