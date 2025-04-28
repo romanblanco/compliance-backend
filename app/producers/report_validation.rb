@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# A Kafka producer client for payload-tracker
+# A Kafka producer client for upload-compliance
 class ReportValidation < ApplicationProducer
   TOPIC = Settings.kafka.topics.upload_compliance
   DATE_FORMAT = :rfc3339

@@ -31,6 +31,11 @@ module Kafka
     end
 
     def policy_id
+      # rubocop:disable Rails/Output
+      puts "\n\u001b[31;1m◉\u001b[0m app/services/kafka/policy_system_importer.rb"
+      puts "@message: #{@message}"
+      puts '-' * 40
+      # rubocop:enable Rails/Output
       @message.dig('host', 'facts', 'image_builder', 'compliance_policy_id')
     end
 

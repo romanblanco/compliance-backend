@@ -13,10 +13,10 @@ module Kafka
       @logger = logger
     end
 
-    # rubocop:disable Metrics/AbcSize
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     def parse_reports
       raise EntitlementError unless identity.valid?
-      raise ReportParseError if reports.empty?
+      raise ReportParseError if reports.blank?
 
       # Map successfuly parsed (validated) reports by scanned profile
       parsed_reports = reports.map do |xml|
@@ -32,8 +32,10 @@ module Kafka
       end
 
       produce_validation_message('success')
+    rescue EntitlementError, ReportParseError
+      produce_validation_message('failure')
     end
-    # rubocop:enable Metrics/AbcSize
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
     private
 
@@ -62,40 +64,54 @@ module Kafka
     end
 
     def metadata
-      @message.dig('platform_metadata') || {}
+      (@message.dig('platform_metadata', 'metadata') || {}).merge(
+        'id' => id,
+        'b64_identity' => b64_identity,
+        'url' => url,
+        'request_id' => request_id,
+        'org_id' => org_id
+      )
+    end
+
+    def id
+      @message.dig('host', 'id')
     end
 
     def account
-      metadata.dig('account')
+      @message.dig('host', 'account')
     end
 
     def b64_identity
-      metadata.dig('b64_identity')
+      @message.dig('platform_metadata', 'b64_identity')
     end
 
     def request_id
-      metadata.dig('request_id')
+      @message.dig('platform_metadata', 'request_id')
     end
 
     def org_id
-      metadata.dig('org_id')
+      @message.dig('platform_metadata', 'org_id')
     end
 
     def url
-      metadata.dig('url')
+      @message.dig('platform_metadata', 'url')
     end
 
     def parse(xml)
-      XccdfReportParser.new(xml, @message)
+      XccdfReportParser.new(xml, metadata)
     rescue PG::Error, ActiveRecord::StatementInvalid => e
       parse_error(e)
-    rescue StandardError
+    rescue StandardError => e
+      # rubocop:disable Rails/Output
+      puts "\n\u001b[31;1m◉\u001b[0m app/services/kafka/report_parser.rb"
+      puts "e: #{e}"
+      puts '-' * 40
+      # rubocop:enable Rails/Output
       raise ReportParseError
     end
 
     def produce_validation_message(result)
-      # TODO: send this message to validation topic, if present
-      # return unless Settings.kafka.topics.upload_compliance.present?
+      return if Settings.kafka.topics.upload_compliance.blank?
 
       ReportValidation.deliver(
         request_id: request_id,
@@ -169,25 +185,25 @@ module Kafka
     #   produce_validation_message('success')
     # end
 
-    # def parse_error(exception)
-    #   msg = "[#{org_id}] #{exception_message(exception)}"
-    #   @logger.error msg
-    #   @logger.audit_fail msg
-    #   produce_validation_message('failed')
-    # end
+    def parse_error(exception)
+      msg = "[#{org_id}] #{exception_message(exception)}"
+      @logger.error msg
+      @logger.audit_fail msg
+      produce_validation_message('failed')
+    end
 
-    # def exception_message(e)
-    #   case e
-    #   when EntitlementError
-    #     "Rejected report with request id #{request_id}: invalid identity or missing insights entitlement"
-    #   when SafeDownloader::DownloadError
-    #     "Failed to dowload report with request id #{request_id}: #{e.message}"
-    #   when ReportParseError
-    #     "Invalid report: #{e.cause.message}"
-    #   else
-    #     "Error parsing report: #{request_id} - #{e.message}"
-    #   end
-    # end
+    def exception_message(exception)
+      case exception
+      when EntitlementError
+        "Rejected report with request id #{request_id}: invalid identity or missing insights entitlement"
+      when SafeDownloader::DownloadError
+        "Failed to dowload report with request id #{request_id}: #{exception.message}"
+      when ReportParseError
+        "Invalid report: #{exception.cause.message}"
+      else
+        "Error parsing report: #{request_id} - #{exception.message}"
+      end
+    end
 
     # TODO: consider creating Report class with attribute 'profile' and 'raw'
     #       to encapsulate methods working with parsed report
