@@ -95,11 +95,13 @@ module Kafka
 
     def produce_validation_message(result)
       # TODO: send this message to validation topic, if present
-      {
-        'request_id': request_id,
-        'service': 'compliance',
-        'validation': result
-      }
+      # return unless Settings.kafka.topics.upload_compliance.present?
+
+      ReportValidation.deliver(
+        request_id: request_id,
+        service: 'compliance',
+        validation: result
+      )
     end
 
     # TODO: uncomment to get rid of Sidekiq
