@@ -116,6 +116,7 @@ describe Kafka::ReportParser do
     let(:profile_id) { 'xccdf_org.ssgproject.content_profile_standard' }
 
     it 'proceses report' do
+      ActiveRecord::Base.logger = Logger.new STDOUT
       expect(Karafka.logger)
         .to receive(:audit_success)
         .with(
