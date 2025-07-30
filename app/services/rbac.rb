@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'insights-rbac-api-client'
+require 'kessel/inventory/v1beta2/inventory_service_services_pb'
 
 # This service is meant to handle calls to the RBAC API
 class Rbac

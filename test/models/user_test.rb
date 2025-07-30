@@ -2,6 +2,7 @@
 
 require 'test_helper'
 require 'insights-rbac-api-client'
+require 'kessel/inventory/v1beta2/inventory_service_services_pb'
 
 class UserTest < ActiveSupport::TestCase
   should validate_uniqueness_of(:username).scoped_to(:account_id)

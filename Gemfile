@@ -79,6 +79,7 @@ gem 'openscap_parser', '~> 1.6.0'
 
 # RBAC service API
 gem 'insights-rbac-api-client', '~> 2.0.0'
+gem 'kessel-sdk', '~> 1.0.0'
 
 # REST API parameter type checking
 gem 'stronger_parameters'
