@@ -12,6 +12,7 @@ module V2
 
       # This is the method where you probably want to put a breakpoint to debug SQL
       def fetch_collection
+        # binding.pry
         scope = filter_by_tags(search(expand_resource))
         count = count_collection(scope)
         # If the count of records equals zero, make sure that the parents are not accessible

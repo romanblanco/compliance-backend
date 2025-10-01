@@ -23,6 +23,11 @@ module V2
         ref = scope.reflect_on_association(association)
 
         # Do not join the association if it has been already joined
+        puts "\n\u001b[31;1m◉\u001b[0m controllers/concerns/v2/resolver.rb"
+        puts "scope.joins_values: #{scope.joins_values}"
+        puts "already_joined(scope): #{already_joined(scope)}"
+        puts "-" * 40
+        # bindnig.pry
         scope = scope.joins(association) unless already_joined(scope).include?(association)
 
         scope.where(association => { ref.klass.primary_key => permitted_params[ref.foreign_key] })
