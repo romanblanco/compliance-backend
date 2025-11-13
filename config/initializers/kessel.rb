@@ -5,19 +5,12 @@
 # and validates the configuration when Kessel is enabled.
 
 Rails.application.configure do
-
-  if !Unleash.nil?
-    # Check if Unleash is available and enabled
-    if UNLEASH.is_enabled?("kessel_enabled")
-      Settings.kessel.enabled = true
-      Rails.logger.info "KESSEL_ENABLED set to true (feature flag enabled)"
-    else
-      Settings.kessel.enabled = false
-      Rails.logger.info "KESSEL_ENABLED set to false (feature flag disabled)"
-    end
+  if Rails.configuration.unleash.is_enabled? 'compliance.kessel_enabled'
+    Settings.kessel.enabled = true
+    Rails.logger.info "KESSEL_ENABLED set to true (feature flag enabled)"
   else
     Settings.kessel.enabled = false
-    Rails.logger.info "KESSEL_ENABLED set to false (Unleash not available)"
+    Rails.logger.info "KESSEL_ENABLED set to false (feature flag disabled)"
   end
 
   if ENV['KESSEL_URL'].present?
