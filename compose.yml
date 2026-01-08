@@ -1,0 +1,355 @@
+# This docker-compose file will stand up the entire stack including ingress and inventory.
+services:
+  kafka:
+    image: docker.io/confluentinc/cp-kafka
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: OTQ3MmM2NDRhNjg3NDZhOG
+  createtopics:
+    image: docker.io/confluentinc/cp-kafka
+    depends_on:
+      - kafka
+    links:
+      - kafka
+    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+                       sleep 10 && \
+                       kafka-topics --create --if-not-exists --topic platform.upload.announce --bootstrap-server kafka:29092 && \
+                       kafka-topics --create --if-not-exists --topic platform.inventory.host-ingress --bootstrap-server kafka:29092 && \
+                       kafka-topics --create --if-not-exists --topic platform.inventory.events --bootstrap-server kafka:29092'"
+  puptoo:
+    image: quay.io/cloudservices/insights-puptoo:latest
+    environment:
+      - REJECTION_TOPIC=platform.upload.validation
+      - LOGLEVEL=INFO
+      - PROMETHEUS_PORT=8001
+    depends_on:
+      - kafka
+      - createtopics
+    links:
+      - kafka
+  minio:
+    image: quay.io/cloudservices/minio
+    command: server /data
+    volumes:
+      - /data
+    ports:
+      - 9000:9000
+    env_file: .env
+  createbuckets:
+    image: docker.io/minio/mc
+    depends_on:
+      - minio
+    links:
+      - minio
+    entrypoint: /bin/sh
+    command: -c '
+      until /usr/bin/mc config host add myminio http://minio:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY >/dev/null; do sleep 1; done ;
+      /usr/bin/mc mb myminio/insights-upload-perma;
+      /usr/bin/mc mb myminio/insights-upload-rejected;
+      /usr/bin/mc policy set download myminio/insights-upload-perma;
+      /usr/bin/mc policy set download myminio/insights-upload-rejected;
+      exit 0;'
+    volumes:
+      - /data
+    env_file: .env
+  ingress:
+    image: quay.io/cloudservices/insights-ingress:latest
+    environment:
+      - AWS_ACCESS_KEY_ID=$MINIO_ACCESS_KEY
+      - AWS_SECRET_ACCESS_KEY=$MINIO_SECRET_KEY
+      - AWS_REGION=us-east-1
+      - INGRESS_STAGEBUCKET=insights-upload-perma
+      - INGRESS_REJECTBUCKET=insights-upload-rejected
+      - INGRESS_VALIDTOPICS=testareno,advisor,buckit,compliance # if you test a different topic, add it here
+      - INGRESS_INVENTORYURL=inventory-web:8081/api/inventory/v1/hosts
+      - OPENSHIFT_BUILD_COMMIT=woopwoop
+      - INGRESS_PORT=8080
+      - INGRESS_WEBPORT=8080
+      - INGRESS_METRICSPORT=3001
+      - INGRESS_MINIODEV=true
+      - INGRESS_MINIOACCESSKEY=$MINIO_ACCESS_KEY
+      - INGRESS_MINIOSECRETKEY=$MINIO_SECRET_KEY
+      - INGRESS_MINIOENDPOINT=minio:9000
+      - INGRESS_MAXSIZE=104857600 # 100 MB
+    env_file: .env
+    ports:
+      - 8080:8080
+    depends_on:
+      - kafka
+    links:
+      - kafka
+  db:
+    image: docker.io/library/postgres:16-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insights -d insights"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    environment:
+      POSTGRES_PASSWORD: insights
+      POSTGRES_USER: insights
+      POSTGRES_DB: insights
+    ports:
+      - 5432:5432
+    volumes:
+      - /var/lib/postgresql/data
+  rbac:
+    image: quay.io/cloudservices/rbac:latest
+    restart: on-failure
+    environment:
+      - REDIS_PORT=6379
+      - REDIS_HOST=redis
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=insights
+      - DATABASE_USER=insights
+      - DATABASE_PASSWORD=insights
+      - API_PATH_PREFIX=/api/rbac
+      - DEVELOPMENT=False
+      - BYPASS_BOP_VERIFICATION=True
+      - IT_BYPASS_TOKEN_VALIDATION=True
+    depends_on:
+      - build-rbac-db
+      - db
+      - redis
+    links:
+      - db
+      - redis
+    ports:
+      - 9002:8080
+    volumes:
+      - ./config/devel/rbac/definitions:/opt/rbac/rbac/management/role/definitions
+      - ./config/devel/rbac/permissions:/opt/rbac/rbac/management/role/permissions
+  build-rbac-db:
+    image: quay.io/cloudservices/rbac:latest
+    environment:
+      - REDIS_PORT=6379
+      - REDIS_HOST=redis
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=insights
+      - DATABASE_USER=insights
+      - DATABASE_PASSWORD=insights
+      - TENANT_PARALLEL_MIGRATION_MAX_PROCESSES=4
+      - TENANT_PARALLEL_MIGRATION_CHUNKS=2
+      - ACCESS_CACHE_CONNECT_SIGNALS=False
+      - MAX_SEED_THREADS=2
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    links:
+      - db
+      - redis
+    volumes:
+      - ./config/devel/rbac/definitions:/opt/rbac/rbac/management/role/definitions
+      - ./config/devel/rbac/permissions:/opt/rbac/rbac/management/role/permissions
+    entrypoint: /bin/sh
+    command: -c './rbac/manage.py migrate ; ./rbac/manage.py seeds'
+  inventory:
+    image: quay.io/cloudservices/insights-inventory:latest
+    command: bash -c 'sleep 10 && make upgrade_db && make run_inv_mq_service'
+    entrypoint: ''
+    environment:
+      - INVENTORY_DB_HOST=db
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - INVENTORY_LOG_LEVEL=ERROR
+      - KAFKA_SECONDARY_TOPIC_ENABLED=True
+    depends_on:
+      - db
+      - kafka
+      - createtopics
+    links:
+      - db
+      - kafka
+    restart: on-failure
+  inventory-web:
+    image: quay.io/cloudservices/insights-inventory:latest
+    command: bash -c 'sleep 10 && make upgrade_db && python run_gunicorn.py'
+    entrypoint: ''
+    environment:
+      - INVENTORY_DB_HOST=db
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_TOPIC=platform.system_profile
+        KAFKA_GROUP=inventory
+      - INVENTORY_LOG_LEVEL=DEBUG
+      - KAFKA_SECONDARY_TOPIC_ENABLED=True
+      - LISTEN_PORT=8081
+    ports:
+      - 8081:8081
+    depends_on:
+      - db
+      - kafka
+      - createtopics
+    links:
+      - db
+      - kafka
+  compliance-ssg:
+    image: quay.io/cloudservices/compliance-ssg
+    restart: on-failure
+    environment:
+      - NGINX_PORT=8088
+    ports:
+      - 8088:8088
+  #
+  # NOTE: The following two 'services' are only required for a new DB
+  # Feel free to comment them out for subsequent use
+  #
+  build-rails-db:
+    image: compliance-backend-rails
+    entrypoint: ''
+    command: sh -c '
+      if bundle exec rake db:exists 2> /dev/null; then
+        bundle exec rake --trace db:migrate;
+      else
+        bundle exec rake --trace db:setup;
+      fi;
+      RAILS_ENV=test bundle exec rake --trace db:create;
+      RAILS_ENV=test bundle exec rake --trace db:test:prepare;
+      echo "Setting up Cyndi data in the development DB";
+      bundle exec rails db -p < db/cyndi_setup_devel.sql;
+      echo "Setting up Cyndi data in the test DB";
+      RAILS_ENV=test bundle exec rails db -p < db/cyndi_setup_test.sql;
+      '
+    tmpfs:
+      - /opt/app-root/src/log
+      - /opt/app-root/src/tmp
+    volumes:
+      - .:/opt/app-root/src:z
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db
+    environment:
+      - POSTGRESQL_TEST_DATABASE=compliance_test
+      - ACG_CONFIG=/opt/app-root/src/devel.json
+  import-ssg:
+    image: compliance-backend-rails
+    entrypoint: ''
+    command: 'bundle exec rake ssg:import_rhel_supported'
+    restart: on-failure
+    tmpfs:
+      - /opt/app-root/src/log
+      - /opt/app-root/src/tmp
+    volumes:
+      - .:/opt/app-root/src/:z
+    depends_on:
+      - db
+      - compliance-ssg
+      - build-rails-db
+    links:
+      - db
+      - compliance-ssg
+    environment:
+      - POSTGRESQL_TEST_DATABASE=compliance_test
+      - RAILS_LOG_TO_STDOUT=true
+      - ACG_CONFIG=/opt/app-root/src/devel.json
+      - RUBY_YJIT_ENABLE=1
+  rails:
+    env_file: .env
+    build:
+      context: .
+      target: build
+      args:
+        - prod=false
+        - extras=$EXTRA_PACKAGES
+    image: compliance-backend-rails
+    entrypoint: '/opt/app-root/src/devel.entrypoint.sh'
+    command: 'bundle exec rails s -b 0.0.0.0'
+    tty: true
+    stdin_open: true
+    restart: on-failure
+    environment:
+      - POSTGRESQL_TEST_DATABASE=compliance_test
+      - DISABLE_DATABASE_ENVIRONMENT_CHECK=1
+      - HOSTNAME=rails
+      - ACG_CONFIG=/opt/app-root/src/devel.json
+      - SWAGGER_DRY_RUN=0
+      - RUBY_YJIT_ENABLE=1
+    ports:
+      - 3000:3000
+    tmpfs:
+      - /opt/app-root/src/log
+      - /opt/app-root/src/tmp
+    volumes:
+      - .:/opt/app-root/src:z
+    depends_on:
+      - db
+      - redis
+      - rbac
+      - compliance-ssg
+      - import-ssg
+    links:
+      - db
+      - redis
+      - rbac
+      - compliance-ssg
+  inventory-consumer:
+    image: compliance-backend-rails
+    restart: on-failure
+    entrypoint: ''
+    command: 'bundle exec karafka server'
+    environment:
+      - POSTGRESQL_TEST_DATABASE=compliance_test
+      - DISABLE_DATABASE_ENVIRONMENT_CHECK=1
+      - HOSTNAME=inventory-consumer
+      - ACG_CONFIG=/opt/app-root/src/devel.json
+      - RUBY_YJIT_ENABLE=1
+      - RAILS_ENV=development
+    tmpfs:
+      - /opt/app-root/src/log
+      - /opt/app-root/src/tmp
+    volumes:
+      - .:/opt/app-root/src:z
+    depends_on:
+      - db
+      - rbac
+      - kafka
+    links:
+      - db
+      - rbac
+      - kafka
+  sidekiq:
+    image: compliance-backend-rails
+    restart: on-failure
+    tmpfs:
+      - /opt/app-root/src/log
+      - /opt/app-root/src/tmp
+    volumes:
+      - .:/opt/app-root/src:z
+    depends_on:
+      - redis
+      - rbac
+    links:
+      - redis
+      - rbac
+    command: bundle exec sidekiq
+    environment:
+      - MALLOC_ARENA_MAX=2
+      - POSTGRESQL_TEST_DATABASE=compliance_test
+      - SIDEKIQ_CONCURRENCY=1
+      - HOSTNAME=sidekiq
+      - ACG_CONFIG=/opt/app-root/src/devel.json
+      - RUBY_YJIT_ENABLE=1
+  redis:
+    image: registry.redhat.io/rhel9/redis-7:latest
+    # image: quay.io/eshamard/redis:8.0.1
+    ports:
+      - 6379:6379
