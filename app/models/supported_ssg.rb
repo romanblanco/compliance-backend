@@ -37,13 +37,19 @@ SupportedSsg = Struct.new(:id, :package, :version, :profiles,
       os_minor_version = os_minor_version.to_s
 
       all.select do |ssg|
-        ssg.os_major_version == os_major_version &&
-          ssg.os_minor_version == os_minor_version
+        if consider_os_minor_versions?
+          # Enterprise mode: match exact major and minor version
+          ssg.os_major_version == os_major_version &&
+            ssg.os_minor_version == os_minor_version
+        else
+          # Upstream mode: match any minor version for the major version
+          ssg.os_major_version == os_major_version
+        end
       end
     end
 
     def ssg_versions_for_os(os_major_version, os_minor_version)
-      for_os(os_major_version, os_minor_version).map(&:version)
+      for_os(os_major_version, os_minor_version).map(&:version).uniq
     end
 
     def versions
@@ -72,7 +78,8 @@ SupportedSsg = Struct.new(:id, :package, :version, :profiles,
 
     # Multilevel map of latest supported SSG for OS major and minor version
     def latest_map
-      cache_wrapper(:map) { build_latest_map }
+      cache_key = consider_os_minor_versions? ? :map : :map_major_only
+      cache_wrapper(cache_key) { build_latest_map }
     end
 
     def by_os_major
@@ -107,13 +114,28 @@ SupportedSsg = Struct.new(:id, :package, :version, :profiles,
     end
 
     def build_latest_map
-      all.group_by(&:os_major_version).transform_values do |major_ssgs|
-        major_ssgs
-          .group_by(&:os_minor_version)
-          .transform_values do |minor_ssgs|
-            minor_ssgs.max_by(&:comparable_version)
-          end.freeze
-      end.freeze
+      if consider_os_minor_versions?
+        # Enterprise mode: group by major and minor versions
+        all.group_by(&:os_major_version).transform_values do |major_ssgs|
+          major_ssgs
+            .group_by(&:os_minor_version)
+            .transform_values do |minor_ssgs|
+              minor_ssgs.max_by(&:comparable_version)
+            end.freeze
+        end.freeze
+      else
+        # Upstream mode: group only by major version, take latest across all minors
+        all.group_by(&:os_major_version).transform_values do |major_ssgs|
+          latest_ssg = major_ssgs.max_by(&:comparable_version)
+          # Return a simplified structure where any minor version maps to the latest SSG
+          Hash.new(latest_ssg).freeze
+        end.freeze
+      end
+    end
+
+    def consider_os_minor_versions?
+      # Default to true to maintain backward compatibility
+      Settings.consider_os_minor_versions != false
     end
 
     # The optional force parameter is responsible for bypassing the cache when importing

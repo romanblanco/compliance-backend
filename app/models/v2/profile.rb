@@ -32,14 +32,31 @@ module V2
     private
 
     def find_variant_for_minor(version)
-      self.class.unscoped
-          .joins(:security_guide, :os_minor_versions)
-          .order(self.class.version_to_array(V2::SecurityGuide.arel_table.alias('security_guide')[:version]).desc)
-          .find_by(
-            ref_id: ref_id,
-            security_guide: { os_major_version: security_guide.os_major_version },
-            os_minor_versions: { os_minor_version: version }
-          )
+      if consider_os_minor_versions?
+        # Enterprise mode: find exact match for OS minor version
+        self.class.unscoped
+            .joins(:security_guide, :os_minor_versions)
+            .order(self.class.version_to_array(V2::SecurityGuide.arel_table.alias('security_guide')[:version]).desc)
+            .find_by(
+              ref_id: ref_id,
+              security_guide: { os_major_version: security_guide.os_major_version },
+              os_minor_versions: { os_minor_version: version }
+            )
+      else
+        # Upstream mode: find latest profile for OS major version, ignore minor version
+        self.class.unscoped
+            .joins(:security_guide)
+            .order(self.class.version_to_array(V2::SecurityGuide.arel_table.alias('security_guide')[:version]).desc)
+            .find_by(
+              ref_id: ref_id,
+              security_guide: { os_major_version: security_guide.os_major_version }
+            )
+      end
+    end
+
+    def consider_os_minor_versions?
+      # Default to true to maintain backward compatibility
+      Settings.consider_os_minor_versions != false
     end
   end
 end

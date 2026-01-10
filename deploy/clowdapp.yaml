@@ -16,7 +16,7 @@ objects:
     testing:
       iqePlugin: compliance
     dependencies:
-    - compliance-ssg
+    - ${SSG_SERVICE_DEPENDENCY}
     - host-inventory
     - ingress
     - rbac
@@ -95,6 +95,10 @@ objects:
           value: ${SETTINGS__REPORT_DOWNLOAD_SSL_ONLY}
         - name: SETTINGS__FORCE_IMPORT_SSGS
           value: "${SETTINGS__FORCE_IMPORT_SSGS}"
+        - name: SETTINGS__CONSIDER_OS_MINOR_VERSIONS
+          value: "${SETTINGS__CONSIDER_OS_MINOR_VERSIONS}"
+        - name: SSG_DEPLOYMENT_MODE
+          value: "${SSG_DEPLOYMENT_MODE}"
         - name: MAX_INIT_TIMEOUT_SECONDS
           value: "${MAX_INIT_TIMEOUT_SECONDS}"
         - name: SETTINGS__REDIS__SSL
@@ -172,6 +176,10 @@ objects:
               optional: true
         - name: SETTINGS__REPORT_DOWNLOAD_SSL_ONLY
           value: ${SETTINGS__REPORT_DOWNLOAD_SSL_ONLY}
+        - name: SETTINGS__CONSIDER_OS_MINOR_VERSIONS
+          value: "${SETTINGS__CONSIDER_OS_MINOR_VERSIONS}"
+        - name: SSG_DEPLOYMENT_MODE
+          value: "${SSG_DEPLOYMENT_MODE}"
         - name: MAX_INIT_TIMEOUT_SECONDS
           value: "${MAX_INIT_TIMEOUT_SECONDS}"
         - name: SETTINGS__REDIS__SSL
@@ -240,6 +248,10 @@ objects:
           value: "${RAILS_LOG_TO_STDOUT}"
         - name: SETTINGS__DISABLE_RBAC
           value: ${DISABLE_RBAC}
+        - name: SETTINGS__CONSIDER_OS_MINOR_VERSIONS
+          value: "${SETTINGS__CONSIDER_OS_MINOR_VERSIONS}"
+        - name: SSG_DEPLOYMENT_MODE
+          value: "${SSG_DEPLOYMENT_MODE}"
         - name: PUMA_WORKERS
           value: "${PUMA_WORKERS}"
         - name: PUMA_MIN_THREADS
@@ -367,6 +379,10 @@ objects:
           value: "${PATH_PREFIX}"
         - name: APP_NAME
           value: "${APP_NAME}"
+        - name: SETTINGS__CONSIDER_OS_MINOR_VERSIONS
+          value: "${SETTINGS__CONSIDER_OS_MINOR_VERSIONS}"
+        - name: SSG_DEPLOYMENT_MODE
+          value: "${SSG_DEPLOYMENT_MODE}"
         - name: MALLOC_ARENA_MAX
           value: '2'
         - name: RUBY_YJIT_ENABLE
@@ -476,6 +492,10 @@ objects:
           value: "${PATH_PREFIX}"
         - name: APP_NAME
           value: "${APP_NAME}"
+        - name: SETTINGS__CONSIDER_OS_MINOR_VERSIONS
+          value: "${SETTINGS__CONSIDER_OS_MINOR_VERSIONS}"
+        - name: SSG_DEPLOYMENT_MODE
+          value: "${SSG_DEPLOYMENT_MODE}"
         - name: SIDEKIQ_CONCURRENCY
           value: "${SIDEKIQ_CONCURRENCY}"
         - name: MALLOC_ARENA_MAX
@@ -791,3 +811,12 @@ parameters:
   value: "FALSE"
 - name: KESSEL_PRINCIPAL_DOMAIN
   value: "redhat"
+- name: SSG_SERVICE_DEPENDENCY
+  description: SSG service dependency (compliance-ssg for enterprise, upstream-ssg for upstream)
+  value: "compliance-ssg"
+- name: SETTINGS__CONSIDER_OS_MINOR_VERSIONS
+  description: Whether to consider OS minor versions for profile support (true for enterprise, false for upstream)
+  value: "true"
+- name: SSG_DEPLOYMENT_MODE
+  description: SSG deployment mode for logging/debugging (enterprise or upstream)
+  value: "enterprise"

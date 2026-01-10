@@ -1,0 +1,43 @@
+# Example parameters for enterprise deployment of compliance-backend
+# Use this with: oc process -f deploy/clowdapp.yaml -p-file deploy/examples/enterprise-deployment-params.yaml
+
+# Basic app configuration
+APP_NAME: "compliance"
+ENV_NAME: "prod"
+
+# Enterprise SSG Configuration
+SSG_SERVICE_DEPENDENCY: "compliance-ssg"
+SETTINGS__CONSIDER_OS_MINOR_VERSIONS: "true"  # Key setting for enterprise mode
+SSG_DEPLOYMENT_MODE: "enterprise"
+
+# Image configuration
+IMAGE: "quay.io/redhat-services-prod/insights-management-tenant/insights-compliance/compliance-backend"
+IMAGE_TAG: "latest"
+
+# Resource configuration (higher for enterprise workload)
+REPLICAS_BACKEND: "3"
+REPLICAS_CONSUMER: "2"
+REPLICAS_SIDEKIQ: "2"
+
+# Memory/CPU limits (enterprise needs more resources)
+MEMORY_LIMIT_SERVICE: "1200Mi"
+MEMORY_REQUEST_SERVICE: "600Mi"
+CPU_LIMIT_SERVICE: "800m"
+CPU_REQUEST_SERVICE: "200m"
+
+# Schedule configuration
+IMPORT_SSG_SCHEDULE: "*/5 * * * *"  # Every 5 minutes (frequent updates for enterprise)
+REINDEX_DB_SCHEDULE: "0 5 * * *"    # Daily at 5 AM
+
+# Enterprise-specific features
+DISABLE_RBAC: "false"  # Enterprise uses RBAC
+SETTINGS__FORCE_IMPORT_SSGS: "false"
+
+# Enterprise-specific settings
+OLD_PATH_PREFIX: "/r/insights/platform"  # Legacy path support
+RAILS_ENV: "production"
+
+# Kessel configuration (enterprise feature)
+KESSEL_ENABLED: "TRUE"
+KESSEL_URL: "kessel-inventory-api:9000"
+KESSEL_AUTH_ENABLED: "TRUE"

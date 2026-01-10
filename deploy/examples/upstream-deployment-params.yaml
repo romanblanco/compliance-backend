@@ -1,0 +1,38 @@
+# Example parameters for upstream deployment of compliance-backend
+# Use this with: oc process -f deploy/clowdapp.yaml -p-file deploy/examples/upstream-deployment-params.yaml
+
+# Basic app configuration
+APP_NAME: "compliance-upstream"
+ENV_NAME: "upstream-prod"
+
+# Upstream SSG Configuration
+SSG_SERVICE_DEPENDENCY: "upstream-ssg"
+SETTINGS__CONSIDER_OS_MINOR_VERSIONS: "false"  # Key setting for upstream mode
+SSG_DEPLOYMENT_MODE: "upstream"
+
+# Image configuration
+IMAGE: "quay.io/redhat-services-prod/insights-management-tenant/insights-compliance/compliance-backend"
+IMAGE_TAG: "latest"
+
+# Resource configuration (can be lighter for upstream)
+REPLICAS_BACKEND: "2"
+REPLICAS_CONSUMER: "1"
+REPLICAS_SIDEKIQ: "1"
+
+# Memory/CPU limits (upstream typically has less load)
+MEMORY_LIMIT_SERVICE: "800Mi"
+MEMORY_REQUEST_SERVICE: "400Mi"
+CPU_LIMIT_SERVICE: "500m"
+CPU_REQUEST_SERVICE: "100m"
+
+# Schedule configuration
+IMPORT_SSG_SCHEDULE: "0 6 * * *"  # Daily at 6 AM (less frequent than enterprise)
+REINDEX_DB_SCHEDULE: "0 5 * * *"   # Daily at 5 AM
+
+# Disable enterprise-specific features
+DISABLE_RBAC: "true"  # Upstream may not use RBAC
+SETTINGS__FORCE_IMPORT_SSGS: "false"
+
+# Upstream-specific settings
+OLD_PATH_PREFIX: ""  # Clean URLs for upstream
+RAILS_ENV: "production"

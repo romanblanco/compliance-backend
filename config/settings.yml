@@ -11,6 +11,10 @@ disable_rbac: false
 async: true
 supported_ssg_ds_config: 'ssg-datastreams.yaml'
 supported_ssg_ansible_tasks_config: 'ssg-ansible-tasks.yaml'
+# Controls whether OS minor versions are considered for profile support
+# Set to true for enterprise deployment (considers minor versions like RHEL 7.1, 7.2)
+# Set to false for upstream deployment where only major versions matter (RHEL 7, 8)
+consider_os_minor_versions: true
 
 # Kessel configuration
 kessel:
