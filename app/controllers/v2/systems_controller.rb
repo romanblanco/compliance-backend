@@ -82,8 +82,9 @@ module V2
         # Filter the passed systems based on what OS versions the policy supports
         # and also drop any system that is assigned to a sibling policy
         items = pundit_scope.where(id: permitted_params[:ids])
-                            .os_major_versions(major).os_minor_versions(minors)
-                            .where.not(id: systems_with_sibling_policies)
+                            .os_major_versions(major)
+        items = items.os_minor_versions(minors) if Settings.consider_os_minor_versions != false
+        items = items.where.not(id: systems_with_sibling_policies)
 
         items.map { |item| V2::PolicySystem.new(policy: policy, system: item) }
       end

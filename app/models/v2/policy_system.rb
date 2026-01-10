@@ -30,7 +30,8 @@ module V2
     def system_supported?
       if policy.os_major_version != system.os_major_version
         errors.add(:system, 'Unsupported OS major version')
-      elsif policy.os_minor_versions.exclude?(system.os_minor_version)
+      elsif Settings.consider_os_minor_versions != false &&
+            policy.os_minor_versions.exclude?(system.os_minor_version)
         errors.add(:system, 'Unsupported OS minor version')
       end
     end
