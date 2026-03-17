@@ -2,6 +2,7 @@
 
 module V2
   # Database model representing latest results of compliance scans
+  # rubocop:disable Metrics/ClassLength
   class TestResult < ApplicationRecord
     # FIXME: clean up after the remodel
     self.table_name = :v2_test_results
@@ -127,14 +128,26 @@ module V2
       attributes['security_guide__version'] || try(:security_guide)&.version
     end
 
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     def self.os_versions
-      aliased_table = V2::System.arel_table.alias('system')
-      major = V2::System.os_major_version(aliased_table)
-      minor = V2::System.os_minor_version(aliased_table)
-      concat = AN::NamedFunction.new('CONCAT', [major.left, AN::Quoted.new('.'), minor.left]).as('os_version')
+      # strip Arel aggregation joins, keep association joins except :system
+      parent_joins = all.joins_values.select { |j| j.is_a?(Symbol) && j != :system }
 
-      distinct.reorder(major.left, minor.left).reselect(concat, major, minor).map(&:os_version)
+      # add system join with explicit 'system' alias for WHERE clause compatibility
+      system = V2::System.arel_table.alias('system')
+      major = V2::System.os_major_version(system)
+      minor = V2::System.os_minor_version(system)
+      concat = AN::NamedFunction.new('CONCAT', [major.left, AN::Quoted.new('.'), minor.left]).as('os_version')
+      system_join = system.create_join(system, system.create_on(system[:id].eq(arel_table[:system_id])))
+
+      except(:joins, :select, :group, :order, :limit, :offset) # strip everything except WHERE
+        .joins(*parent_joins, system_join) # apply parent joins and system join
+        .distinct
+        .reorder(major.left, minor.left)
+        .reselect(concat, major, minor)
+        .map(&:os_version)
     end
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
     def self.security_guide_versions
       reselect(security_guide: [:version])
@@ -143,4 +156,5 @@ module V2
         .uniq # using this instead of `.distinct` to properly handle sorting of versions. It should still perform fine.
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end
