@@ -7,13 +7,19 @@ module V2
 
     private
 
-    # Building the query that returns all the required data for serialization
-    def expand_resource
+    # Base scope: parent joins and 1:1 association joins applied, without aggregation subqueries,
+    # field selection, or request filters. Foundation for both expand_resource (serialization)
+    # and filtered_base_scope in Collection (metadata endpoints like os_versions).
+    def base_scope
       # Join with the parents assumed from the route
       scope = join_parents(pundit_scope, permitted_params[:parents])
-      # Join with the additional 1:1 relationships required by the serializer, select only the
-      # dependencies that are really necessary for the rendering.
-      join_aggregated(join_associated(scope)).select(*select_fields)
+      # Join with the additional 1:1 relationships required by the serializer
+      join_associated(scope)
+    end
+
+    # Building the query that returns all the required data for serialization
+    def expand_resource
+      join_aggregated(base_scope).select(*select_fields)
     end
 
     # Reduce through all the associations of the `relation` and join+scope them or return the
@@ -31,11 +37,16 @@ module V2
     end
 
     # Select the 1:1 associations that can be satisfied without any additional WHERE clause,
-    # then join them with the relation.
+    # then join them with the relation. Uses left_outer_joins so that association joins are
+    # stored in left_outer_joins_values separately from the parent-route Symbol joins in
+    # joins_values, and survive except(:joins) when called from metadata scopes.
     def join_associated(relation)
       # Do not join with the already joined parents assumed from the (nested) route
       associations = dependencies.keys.excluding(*permitted_params[:parents]).compact
-      relation.where.associated(*associations)
+      associations.reduce(relation) do |scope, association|
+        ref = scope.reflect_on_association(association)
+        scope.left_outer_joins(association).where.not(association => { ref.association_primary_key => nil })
+      end
     end
 
     # Self-join with the requested aggregations built using 1:n associations, also select

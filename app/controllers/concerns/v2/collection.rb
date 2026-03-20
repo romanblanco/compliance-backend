@@ -10,6 +10,12 @@ module V2
     included do
       private
 
+      # Scope for metadata endpoints (e.g. os_versions) that need search and tag filtering
+      # but not the aggregation subqueries added by expand_resource for serialization.
+      def filtered_base_scope
+        filter_by_tags(search(base_scope))
+      end
+
       # This is the method where you probably want to put a breakpoint to debug SQL
       def fetch_collection
         scope = filter_by_tags(search(expand_resource))

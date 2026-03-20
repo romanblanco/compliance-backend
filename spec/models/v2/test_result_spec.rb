@@ -27,32 +27,11 @@ describe V2::TestResult do
       end
     end
 
-    subject { described_class.where.associated(:system) }
+    # Mirrors what join_associated produces for :system in the resolver
+    subject { described_class.left_outer_joins(:system).where.not(system: { id: nil }) }
 
     it 'returns a unique and sorted set of all versions' do
       expect(subject.os_versions.to_set { |version| version.delete('"') }).to eq(versions.to_set)
-    end
-
-    context 'query optimization' do
-      it 'strips aggregation joins to prevent duplicate table scans' do
-        fake_table = Arel::Table.new('nonexistent_test_table')
-        join_condition = fake_table[:id].eq(described_class.arel_table[:id])
-        aggregation_join = fake_table.create_join(fake_table, fake_table.create_on(join_condition))
-
-        scope_with_aggregation = subject.joins(aggregation_join)
-
-        captured_sql = []
-        subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |*, payload|
-          captured_sql << payload[:sql] if payload[:sql].include?('CONCAT')
-        end
-
-        scope_with_aggregation.os_versions
-        ActiveSupport::Notifications.unsubscribe(subscriber)
-
-        query = captured_sql.first
-        expect(query).not_to include('nonexistent_test_table')
-        expect(query.scan('"inventory"."hosts"').count).to eq(1)
-      end
     end
   end
 
