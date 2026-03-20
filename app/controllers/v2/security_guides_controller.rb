@@ -23,7 +23,9 @@ module V2
     permitted_params_for_action :rule_tree, id: ID_TYPE.required
 
     def os_versions
-      render json: filtered_base_scope.os_versions, status: :ok
+      result = filtered_base_scope.os_versions
+      validate_parents! if result.empty? && permitted_params[:parents]&.any?
+      render json: result, status: :ok
     end
     permission_for_action :os_versions, Rbac::COMPLIANCE_VIEWER
     kessel_permission_for_action :os_versions, KesselRbac::POLICY_VIEW
