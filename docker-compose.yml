@@ -53,7 +53,7 @@ services:
       - 9000:9000
     env_file: .env
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      test: "curl -f http://localhost:9000/minio/health/live || exit 1"
       interval: 5s
       timeout: 5s
       retries: 5
@@ -105,11 +105,11 @@ services:
     links:
       - kafka
   db:
-    image: docker.io/library/postgres:16-alpine
+    image: ${POSTGRES_IMAGE:-docker.io/library/postgres:16-alpine}
     platform: linux/amd64
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U insights -d insights"]
+      test: "pg_isready -U insights -d insights"
       interval: 5s
       timeout: 5s
       retries: 5
