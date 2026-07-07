@@ -35,7 +35,7 @@ module V2
     end
 
     def test_result
-      @test_result ||= authorize(expand_resource.find(permitted_params[:id]))
+      @test_result ||= authorize(filter_by_tags(expand_resource).find(permitted_params[:id]))
     end
 
     def resource

@@ -64,6 +64,16 @@ end
 RSpec.shared_examples 'taggable_show' do |*parents|
   let(:passable_params) { reject_nonscalar(extra_params) }
 
+  context 'when system belongs to a different organization scope' do
+    it 'prevents access via direct ID lookup' do
+      item.update(tags: [{ namespace: 'sat_iam', key: 'scope', value: 'U:"admin"O:"ACME"L:"Default"' }])
+
+      get :show, params: passable_params.merge(parents: parents, tags: ['sat_iam/scope=U:"operator"O:"Globex"L:"Springfield"'])
+
+      expect(response).to have_http_status :not_found
+    end
+  end
+
   context 'with matching scope tag' do
     it 'returns the item' do
       item.update(tags: [{ namespace: 'sat_iam', key: 'scope', value: 'U:"admin"O:"ACME"L:"Default"' }])
@@ -75,7 +85,7 @@ RSpec.shared_examples 'taggable_show' do |*parents|
     end
   end
 
-  context 'with scope tag for a different user' do
+  context 'with scope tag for a different user in the same organization' do
     it 'returns not_found' do
       item.update(tags: [{ namespace: 'sat_iam', key: 'scope', value: 'U:"admin"O:"ACME"L:"Default"' }])
 
