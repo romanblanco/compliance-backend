@@ -131,6 +131,7 @@ describe TestResultsController do
       let(:notfound_params) { extra_params.merge(report_id: FactoryBot.create(:report).id) }
 
       it_behaves_like 'individual', :report
+      it_behaves_like 'taggable_show', :report
 
       context 'system from an inaccessible inventory group' do
         before do
