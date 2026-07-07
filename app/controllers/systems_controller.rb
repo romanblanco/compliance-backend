@@ -61,7 +61,7 @@ class SystemsController < ApplicationController
   end
 
   def system
-    @system ||= authorize(expand_resource.find(permitted_params[:id]))
+    @system ||= authorize(filter_by_tags(expand_resource).find(permitted_params[:id]))
   end
 
   def new_policy_system

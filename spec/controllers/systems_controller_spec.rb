@@ -69,6 +69,7 @@ describe SystemsController do
       let(:extra_params) { { id: item.id } }
 
       it_behaves_like 'individual'
+      it_behaves_like 'taggable_show'
     end
   end
 
@@ -768,6 +769,7 @@ describe SystemsController do
       let(:notfound_params) { extra_params.merge(report_id: FactoryBot.create(:report).id) }
 
       it_behaves_like 'individual', :reports
+      it_behaves_like 'taggable_show', :reports
     end
   end
 end
