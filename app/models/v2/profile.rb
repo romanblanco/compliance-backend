@@ -45,14 +45,19 @@ module V2
     private
 
     def find_variant_for_minor(version)
+      scope = variant_base_scope
+      scope = scope.joins(:os_minor_versions).where(os_minor_versions: { os_minor_version: version }) if consider_minor?
+      scope.find_by(ref_id: ref_id, security_guide: { os_major_version: security_guide.os_major_version })
+    end
+
+    def variant_base_scope
       self.class.unscoped
-          .joins(:security_guide, :os_minor_versions)
+          .joins(:security_guide)
           .order(self.class.version_to_array(V2::SecurityGuide.arel_table.alias('security_guide')[:version]).desc)
-          .find_by(
-            ref_id: ref_id,
-            security_guide: { os_major_version: security_guide.os_major_version },
-            os_minor_versions: { os_minor_version: version }
-          )
+    end
+
+    def consider_minor?
+      Settings.consider_os_minor_versions != false
     end
   end
 end

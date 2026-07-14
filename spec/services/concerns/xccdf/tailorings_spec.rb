@@ -34,6 +34,19 @@ RSpec.describe Xccdf::Tailorings do
         expect(service.tailoring).to be_nil
       end
     end
+
+    context 'when consider_os_minor_versions is false' do
+      before { allow(Settings).to receive(:consider_os_minor_versions).and_return(false) }
+
+      let!(:assigned_system) { create(:system, account: user.account, policy_id: policy.id, os_minor_version: os_minor_version) }
+      let!(:system) { create(:system, account: user.account, os_minor_version: unsupported_os_minor_version) }
+
+      it 'finds the tailoring at minor version 0 regardless of system minor' do
+        expected = V2::Tailoring.find_by!(policy_id: policy.id, os_minor_version: os_minor_version)
+
+        expect(service.tailoring).to eq(expected)
+      end
+    end
   end
 
   describe '#external_report?' do

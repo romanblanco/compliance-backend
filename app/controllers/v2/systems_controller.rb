@@ -77,16 +77,16 @@ module V2
 
     def new_policy_systems
       @new_policy_systems ||= begin
-        major = policy.os_major_version
-        minors = policy.os_minor_versions
-        # Filter the passed systems based on what OS versions the policy supports
-        # and also drop any system that is assigned to a sibling policy
-        items = pundit_scope.where(id: permitted_params[:ids])
-                            .os_major_versions(major).os_minor_versions(minors)
-                            .where.not(id: systems_with_sibling_policies)
-
+        items = assignable_systems
+        items = items.os_minor_versions(policy.os_minor_versions) if Settings.consider_os_minor_versions != false
         items.map { |item| V2::PolicySystem.new(policy: policy, system: item) }
       end
+    end
+
+    def assignable_systems
+      pundit_scope.where(id: permitted_params[:ids])
+                  .os_major_versions(policy.os_major_version)
+                  .where.not(id: systems_with_sibling_policies)
     end
 
     def old_policy_systems
@@ -96,9 +96,12 @@ module V2
     end
 
     def build_tailorings!
-      new_policy_systems.uniq { |ps| ps.system.os_minor_version }.each do |record|
-        record.run_callbacks(:create)
-      end
+      dedup = if Settings.consider_os_minor_versions == false
+                ->(_ps) { 0 }
+              else
+                ->(ps) { ps.system.os_minor_version }
+              end
+      new_policy_systems.uniq(&dedup).each { |record| record.run_callbacks(:create) }
     end
 
     # This method is a product of a performance tradeoff and should be used with caution as there

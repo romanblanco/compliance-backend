@@ -59,8 +59,9 @@ module V2
     end
 
     def self.for_policy(policy, os_minor_version)
-      profile = policy.profile.variant_for_minor(os_minor_version)
-      V2::Tailoring.new(policy: policy, os_minor_version: os_minor_version,
+      minor = Settings.consider_os_minor_versions == false ? 0 : os_minor_version
+      profile = policy.profile.variant_for_minor(minor)
+      V2::Tailoring.new(policy: policy, os_minor_version: minor,
                         profile: profile, value_overrides: profile.value_overrides)
     end
 
