@@ -20,13 +20,13 @@ SELECT
     stale_timestamp + INTERVAL '1' DAY * 7 AS stale_warning_timestamp,
     stale_timestamp + INTERVAL '1' DAY * 14 AS culled_timestamp,
     stale_timestamp + INTERVAL '1' DAY * 8 AS last_check_in,
-    tags,
+    COALESCE(tags_alt, '[]'::jsonb) as tags,
     jsonb_build_object('operating_system', operating_system, 'host_type', host_type, 'owner_id', owner_id) as system_profile,
     groups,
     insights_id
 FROM dblink('dbname=insights user=insights', '
     SELECT h.id, h.account, h.org_id, h.display_name, h.created_on, h.modified_on,
-           h.stale_timestamp, h.tags, h.groups, h.insights_id,
+           h.stale_timestamp, h.tags_alt, h.groups, h.insights_id,
            sps.operating_system, sps.host_type, sps.owner_id
     FROM hbi.hosts h
     LEFT JOIN hbi.system_profiles_static sps ON sps.org_id = h.org_id AND sps.host_id = h.id
@@ -38,7 +38,7 @@ FROM dblink('dbname=insights user=insights', '
     created_on timestamp with time zone,
     modified_on timestamp with time zone,
     stale_timestamp timestamp with time zone,
-    tags jsonb,
+    tags_alt jsonb,
     groups jsonb,
     insights_id uuid,
     operating_system jsonb,
