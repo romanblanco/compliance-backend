@@ -52,5 +52,22 @@ describe Profile do
         expect { subject.variant_for_minor(0) }.to raise_exception(Exceptions::OSMinorVersionNotSupported)
       end
     end
+
+    context 'when consider_os_minor_versions is false' do
+      before { allow(Settings).to receive(:consider_os_minor_versions).and_return(false) }
+
+      let!(:result) do
+        FactoryBot.create(
+          :v2_profile,
+          ref_id: subject.ref_id,
+          supports_minors: [0],
+          security_guide: FactoryBot.create(:v2_security_guide, version: '999.0.0')
+        )
+      end
+
+      it 'finds a variant regardless of requested minor version' do
+        expect(subject.variant_for_minor(4)).to eq(result)
+      end
+    end
   end
 end
