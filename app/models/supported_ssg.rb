@@ -38,12 +38,12 @@ SupportedSsg = Struct.new(:id, :package, :version, :profiles,
 
       all.select do |ssg|
         ssg.os_major_version == os_major_version &&
-          ssg.os_minor_version == os_minor_version
+          (Settings.consider_os_minor_versions == false || ssg.os_minor_version == os_minor_version)
       end
     end
 
     def ssg_versions_for_os(os_major_version, os_minor_version)
-      for_os(os_major_version, os_minor_version).map(&:version)
+      for_os(os_major_version, os_minor_version).map(&:version).uniq
     end
 
     def versions
@@ -108,11 +108,15 @@ SupportedSsg = Struct.new(:id, :package, :version, :profiles,
 
     def build_latest_map
       all.group_by(&:os_major_version).transform_values do |major_ssgs|
-        major_ssgs
-          .group_by(&:os_minor_version)
-          .transform_values do |minor_ssgs|
-            minor_ssgs.max_by(&:comparable_version)
-          end.freeze
+        latest_for_major(major_ssgs)
+      end.freeze
+    end
+
+    def latest_for_major(major_ssgs)
+      return Hash.new(major_ssgs.max_by(&:comparable_version)).freeze if Settings.consider_os_minor_versions == false
+
+      major_ssgs.group_by(&:os_minor_version).transform_values do |minor_ssgs|
+        minor_ssgs.max_by(&:comparable_version)
       end.freeze
     end
 

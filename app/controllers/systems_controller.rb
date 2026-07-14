@@ -76,16 +76,16 @@ class SystemsController < ApplicationController
 
   def new_policy_systems
     @new_policy_systems ||= begin
-      major = policy.os_major_version
-      minors = policy.os_minor_versions
-      # Filter the passed systems based on what OS versions the policy supports
-      # and also drop any system that is assigned to a sibling policy
-      items = pundit_scope.where(id: permitted_params[:ids])
-                          .os_major_versions(major).os_minor_versions(minors)
-                          .where.not(id: systems_with_sibling_policies)
-
+      items = assignable_systems
+      items = items.os_minor_versions(policy.os_minor_versions) if Settings.consider_os_minor_versions != false
       items.map { |item| PolicySystem.new(policy: policy, system: item) }
     end
+  end
+
+  def assignable_systems
+    pundit_scope.where(id: permitted_params[:ids])
+                .os_major_versions(policy.os_major_version)
+                .where.not(id: systems_with_sibling_policies)
   end
 
   def old_policy_systems
@@ -95,7 +95,8 @@ class SystemsController < ApplicationController
   end
 
   def build_tailorings!
-    new_policy_systems.uniq { |ps| ps.system.os_minor_version }.each do |record|
+    minor_key = Settings.consider_os_minor_versions == false ? ->(_ps) { 0 } : ->(ps) { ps.system.os_minor_version }
+    new_policy_systems.uniq { |ps| minor_key.call(ps) }.each do |record|
       record.run_callbacks(:create)
     end
   end

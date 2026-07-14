@@ -215,6 +215,35 @@ describe SystemsController do
         end
       end
 
+      context 'when consider_os_minor_versions is false' do
+        before { allow(Settings).to receive(:consider_os_minor_versions).and_return(false) }
+
+        let(:unsupported_item) do
+          FactoryBot.create(
+            :system,
+            account: current_user.account,
+            os_major_version: parent.os_major_version,
+            os_minor_version: 10
+          )
+        end
+
+        it 'assigns systems with any minor version' do
+          post :create, params: { ids: ids + [unsupported_item.id], policy_id: parent.id, parents: [:policies] }
+
+          expect(response).to have_http_status :accepted
+          expect(parent.systems.map(&:id)).to include(unsupported_item.id)
+        end
+
+        it 'creates a single tailoring at minor version 0' do
+          post :create, params: { ids: ids + [unsupported_item.id], policy_id: parent.id, parents: [:policies] }
+
+          expect(response).to have_http_status :accepted
+          new_tailorings = parent.tailorings.where.not(os_minor_version: 8)
+          expect(new_tailorings.count).to eq(1)
+          expect(new_tailorings.first.os_minor_version).to eq(0)
+        end
+      end
+
       context 'empty list of system IDs' do
         let(:items) { [] }
 
