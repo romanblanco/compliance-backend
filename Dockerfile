@@ -81,7 +81,7 @@ COPY --chown=1001:0 --from=build /opt/app-root/src/.bundle /opt/app-root/src/.bu
 
 ENV RAILS_ENV=production RAILS_LOG_TO_STDOUT=true HOME=/opt/app-root/src DEV_DEPS=$devDeps \
     BUNDLE_PATH=/opt/app-root/src/.bundle BUNDLE_WITHOUT=development:test BUNDLE_DEPLOYMENT=true \
-    BUNDLE_VERSION=4.0.16 BUNDLE_DISABLE_VERSION_CHECK=true \
+    BUNDLE_DISABLE_VERSION_CHECK=true \
     prometheus_multiproc_dir=/opt/app-root/src/tmp prometheus_rust_mmaped_file=false
 
 CMD ["/opt/app-root/src/entrypoint.sh"]
