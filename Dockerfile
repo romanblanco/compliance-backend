@@ -4,9 +4,10 @@ ARG extras=""
 ARG prod="true"
 ARG pgRepo="https://copr.fedorainfracloud.org/coprs/mmraka/postgresql-16/repo/epel-9/mmraka-postgresql-16-epel-9.repo"
 ARG BUNDLE_JOBS="4"
+ARG BUILDER_IMAGE="registry.access.redhat.com/ubi9/ubi-minimal@sha256:062c52ff973065752b0965787649db2bcf551a6c727a00e95a3eb42cebadbdab"
 ARG HERMETIC="false"
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:062c52ff973065752b0965787649db2bcf551a6c727a00e95a3eb42cebadbdab AS build
+FROM ${BUILDER_IMAGE} AS build
 
 ARG deps
 ARG devDeps
@@ -34,6 +35,8 @@ RUN ( [[ $HERMETIC == "true" ]] || microdnf module enable -y postgresql:16 || cu
     microdnf module enable -y ruby:3.3                                                                    && \
     microdnf install --nodocs -y $deps $devDeps $extras                                                   && \
     chmod +t /tmp                                                                                         && \
+    ( [[ $HERMETIC == "true" ]] || gem update --system -N --install-dir=/usr/share/gems --bindir /usr/bin ) && \
+    ( [[ $HERMETIC == "true" ]] || gem install bundler )                                                    && \
     ( [[ $HERMETIC != "true" ]] || (mkdir -p .cargo && cp .hermetic_builds/cargo/config.toml .cargo/config.toml) ) && \
     ( [[ $prod != "true" ]] || bundle config set --local without 'development test' )                     && \
     ( [[ $prod != "true" ]] || bundle config set --local deployment 'true' )                              && \
@@ -76,6 +79,9 @@ USER 1001
 COPY --chown=1001:0 . /opt/app-root/src
 COPY --chown=1001:0 --from=build /opt/app-root/src/.bundle /opt/app-root/src/.bundle
 
-ENV RAILS_ENV=production RAILS_LOG_TO_STDOUT=true HOME=/opt/app-root/src DEV_DEPS=$devDeps prometheus_multiproc_dir=/opt/app-root/src/tmp prometheus_rust_mmaped_file=false
+ENV RAILS_ENV=production RAILS_LOG_TO_STDOUT=true HOME=/opt/app-root/src DEV_DEPS=$devDeps \
+    BUNDLE_PATH=/opt/app-root/src/.bundle BUNDLE_WITHOUT=development:test BUNDLE_DEPLOYMENT=true \
+    BUNDLE_VERSION=4.0.16 BUNDLE_DISABLE_VERSION_CHECK=true \
+    prometheus_multiproc_dir=/opt/app-root/src/tmp prometheus_rust_mmaped_file=false
 
 CMD ["/opt/app-root/src/entrypoint.sh"]
