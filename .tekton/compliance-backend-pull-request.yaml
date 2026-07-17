@@ -40,6 +40,13 @@ spec:
     value: .
   - name: enable-cache-proxy
     value: "true"
+  - name: hermetic
+    value: "true"
+  - name: prefetch-input
+    value: '[{"type": "bundler", "path": "."}, {"type": "rpm", "path": "."}, {"type": "cargo", "path": ".hermetic_builds/cargo"}]'
+  - name: build-args
+    value:
+      - HERMETIC=true
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
@@ -95,6 +102,10 @@ spec:
     - default: ""
       description: Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file
       name: build-args-file
+      type: string
+    - name: enable-cache-proxy
+      default: 'false'
+      description: Enable cache proxy configuration
       type: string
     - name: buildah-format
       default: docker
