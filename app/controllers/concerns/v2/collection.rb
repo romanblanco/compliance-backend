@@ -24,18 +24,26 @@ module V2
       def fetch_collection
         scope = filter_by_tags(search(expand_resource))
         count = count_collection(scope)
-        # If the count of records equals zero, make sure that the parents are not accessible
         validate_parents! if count.zero? && permitted_params[:parents]&.any?
 
         sort(scope).limit(pagination_limit).offset(pagination_offset)
       end
 
       def count_collection(scope)
-        # Count the whole collection using a single column and not the whole table. This column
-        # by default is the primary key of the table, however, in certain cases using a different
-        # indexed column might produce faster results without even accessing the table.
-        # Pagination is disabled when counting collection so that all returned entities are counted.
-        @count_collection ||= scope.except(:limit, :offset).reselect(resource.base_class.count_by).count
+        @count_collection ||= if aggregations.any?
+          count_without_aggregation(scope)
+        else
+          scope.except(:limit, :offset).reselect(resource.base_class.count_by).count
+        end
+      end
+
+      def count_without_aggregation(fallback_scope)
+        lean = filter_by_tags(search(base_scope))
+        resource.transaction(requires_new: true) do
+          lean.except(:limit, :offset).reselect(resource.base_class.count_by).count
+        end
+      rescue ActiveRecord::StatementInvalid
+        fallback_scope.except(:limit, :offset).reselect(resource.base_class.count_by).count
       end
 
       def validate_parents!
