@@ -68,6 +68,8 @@ describe RuleResultPolicy do
     let(:group) { Faker::Internet.uuid }
 
     before do
+      allow(Settings).to receive(:disable_rbac).and_return(false)
+
       stub_rbac_permissions(
         Rbac::INVENTORY_HOSTS_READ => [{
           attribute_filter: {
@@ -110,6 +112,8 @@ describe RuleResultPolicy do
     let(:groups) { [] }
 
     before do
+      allow(Settings).to receive(:disable_rbac).and_return(false)
+
       stub_rbac_permissions(
         Rbac::INVENTORY_HOSTS_READ => [{
           attribute_filter: {

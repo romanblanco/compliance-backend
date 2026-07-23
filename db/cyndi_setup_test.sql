@@ -42,6 +42,23 @@ SELECT
     insights_id
 FROM inventory.hosts_v1_1;
 
+-- INSTEAD OF INSERT trigger so the view is writable from tests
+CREATE OR REPLACE FUNCTION inventory.hosts_insert_fn()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO inventory.hosts_v1_1
+    (id, account, org_id, display_name, tags, updated, created, stale_timestamp, system_profile, groups, insights_id)
+  VALUES
+    (NEW.id, NEW.account, NEW.org_id, NEW.display_name, NEW.tags, NEW.updated, NEW.created, NEW.stale_timestamp, NEW.system_profile, NEW.groups, NEW.insights_id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS hosts_insert_trigger ON inventory.hosts;
+CREATE TRIGGER hosts_insert_trigger
+  INSTEAD OF INSERT ON inventory.hosts
+  FOR EACH ROW EXECUTE FUNCTION inventory.hosts_insert_fn();
+
 --
 -- Clear any existing host seeds
 --
