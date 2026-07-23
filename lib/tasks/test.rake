@@ -9,7 +9,9 @@ namespace :spec do
   end
 end
 
-unless Rails.env.production?
+begin
   require 'rubocop/rake_task'
   RuboCop::RakeTask.new
+rescue LoadError # rubocop not available outside dev/test
+  nil
 end

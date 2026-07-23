@@ -112,6 +112,8 @@ describe ReportsController do
           end
 
           before do
+            allow(Settings).to receive(:disable_rbac).and_return(false)
+
             stub_rbac_permissions(
               Rbac::INVENTORY_HOSTS_READ => [{
                 attribute_filter: {
@@ -237,6 +239,8 @@ describe ReportsController do
           end
 
           before do
+            allow(Settings).to receive(:disable_rbac).and_return(false)
+
             stub_rbac_permissions(
               Rbac::INVENTORY_HOSTS_READ => [{
                 attribute_filter: {
@@ -501,6 +505,8 @@ describe ReportsController do
 
       context 'in inaccessible inventory groups' do
         before do
+          allow(Settings).to receive(:disable_rbac).and_return(false)
+
           stub_rbac_permissions(
             Rbac::INVENTORY_HOSTS_READ => [{
               attribute_filter: {

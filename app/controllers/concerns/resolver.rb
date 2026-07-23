@@ -70,7 +70,38 @@ module Resolver
                  .group(resource.primary_key)
                  .select(resource.primary_key, *aliases)
                  .merge(aggregate_scope)
+
+    sq = apply_aggregate_tags(sq, association)
+
     resource.arel_self_join(sq.arel.as(association.to_s))
+  end
+
+  def apply_aggregate_tags(scope, association)
+    return scope unless permitted_params[:tags]&.any?
+
+    tags = parse_tags(permitted_params[:tags])
+    return scope if tags.blank?
+
+    assoc_klass = resource.reflect_on_association(association).klass
+    sys = System.arel_table
+    tags_condition = Arel::Nodes::InfixOperation.new(
+      '@>', sys[:tags],
+      Arel::Nodes::NamedFunction.new('CAST', [Arel::Nodes.build_quoted(tags.to_json).as('jsonb')])
+    )
+
+    if assoc_klass.try(:taggable?) || scope.to_sql.include?(System.table_name)
+      scope.where(tags_condition)
+    elsif assoc_klass.reflect_on_association(:system)
+      assoc = assoc_klass.arel_table
+      join = sys.create_join(
+        sys,
+        sys.create_on(sys[:id].eq(assoc[:system_id])),
+        Arel::Nodes::InnerJoin
+      )
+      scope.joins(join).where(tags_condition)
+    else
+      scope
+    end
   end
 
   # This is a hack to utilize a Pundit scope for an alternative resolution for aggregations.

@@ -32,6 +32,8 @@ describe SystemPolicy do
     let(:group) { Faker::Internet.uuid }
 
     before do
+      allow(Settings).to receive(:disable_rbac).and_return(false)
+
       stub_rbac_permissions(
         Rbac::INVENTORY_HOSTS_READ => [{
           attribute_filter: {
@@ -63,6 +65,8 @@ describe SystemPolicy do
 
   context 'ungrouped access' do
     before do
+      allow(Settings).to receive(:disable_rbac).and_return(false)
+
       stub_rbac_permissions(
         Rbac::INVENTORY_HOSTS_READ => [{
           attribute_filter: {
