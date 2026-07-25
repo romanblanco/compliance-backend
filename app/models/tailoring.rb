@@ -22,7 +22,10 @@ class Tailoring < ApplicationRecord
     ]
   )
 
-  indexable_by :os_minor_version, &->(scope, value) { scope.find_by!(os_minor_version: value) }
+  indexable_by :os_minor_version, &->(scope, value) {
+    minor = Settings.consider_os_minor_versions == false ? 0 : value
+    scope.find_by!(os_minor_version: minor)
+  }
 
   sortable_by :os_minor_version
 
