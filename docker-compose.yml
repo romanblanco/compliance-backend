@@ -344,28 +344,6 @@ services:
         condition: service_started
       kafka:
         condition: service_started
-  sidekiq:
-    image: localhost/compliance-backend-rails
-    platform: linux/amd64
-    restart: on-failure
-    tmpfs:
-      - /opt/app-root/src/log
-      - /opt/app-root/src/tmp
-    volumes:
-      - .:/opt/app-root/src:z
-    depends_on:
-      redis:
-        condition: service_started
-      rbac:
-        condition: service_started
-    command: bundle exec sidekiq
-    environment:
-      - MALLOC_ARENA_MAX=2
-      - POSTGRESQL_TEST_DATABASE=compliance_test
-      - SIDEKIQ_CONCURRENCY=1
-      - HOSTNAME=sidekiq
-      - ACG_CONFIG=/opt/app-root/src/devel.json
-      - RUBY_YJIT_ENABLE=1
   redis:
     image: registry.redhat.io/rhel9/redis-7:latest
     platform: linux/amd64

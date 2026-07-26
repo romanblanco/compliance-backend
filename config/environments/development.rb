@@ -63,7 +63,7 @@ Rails.application.configure do
     config.logger = Insights::Api::Common::LoggerWithAudit.new(config.paths['log'].first, 1, 64.megabytes)
   end
 
-  # Enable sessions in development for Sidekiq WebUI access
+  # Enable sessions in development for GoodJob dashboard access
   config.session_store :cookie_store, key: '_compliance_session'
   config.middleware.use ActionDispatch::Cookies
   config.middleware.use config.session_store, config.session_options

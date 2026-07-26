@@ -12,11 +12,6 @@ class ParseReportJob < ApplicationJob
     { qe: OpenshiftEnvironment.qe_account?(message['org_id']) }
   end
 
-  # FIXME: compatibility method between Sidekiq and ActiveJob, remove after migration to GoodJob
-  def jid
-    provider_job_id || job_id
-  end
-
   def perform(report_blob, message)
     return if cancelled?
 
@@ -33,13 +28,11 @@ class ParseReportJob < ApplicationJob
   end
 
   def cancelled?
-    return false unless self.class.queue_adapter_name == 'sidekiq'
-
-    Sidekiq.redis { |c| c.exists?("cancelled-#{jid}") }
+    GoodJob::Job.where(active_job_id: job_id).pick(:finished_at).present?
   end
 
-  def self.cancel!(jid)
-    Sidekiq.redis { |c| c.setex("cancelled-#{jid}", 86_400, 1) }
+  def self.cancel!(active_job_id)
+    GoodJob::Job.where(active_job_id: active_job_id).update_all(finished_at: Time.current)
   end
 
   private
@@ -58,11 +51,11 @@ class ParseReportJob < ApplicationJob
   end
 
   def parse_and_save_report
-    notify_payload_tracker(:processing, "Job #{jid} is now processing")
+    notify_payload_tracker(:processing, "Job #{job_id} is now processing")
     compliance_notification_wrapper { parser.persist! }
     notify_remediation
     audit_success
-    notify_payload_tracker(:success, "Job #{jid} has completed successfully")
+    notify_payload_tracker(:success, "Job #{job_id} has completed successfully")
   rescue *XccdfReportParser::ERRORS => e
     handle_error(e)
   end
@@ -78,7 +71,7 @@ class ParseReportJob < ApplicationJob
     ReportUploadFailed.deliver(system: System.find_by(id: @msg_value['id'], org_id: @msg_value['org_id']),
                                request_id: @msg_value['request_id'], error: notification_message(exc),
                                org_id: @msg_value['org_id'])
-    Sidekiq.logger.error(msg_with_values)
+    Rails.logger.error(msg_with_values)
     Rails.logger.audit_fail("[#{@msg_value['org_id']}] #{msg}")
   end
 
