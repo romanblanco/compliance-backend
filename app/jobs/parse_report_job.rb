@@ -4,7 +4,6 @@
 class ParseReportJob < ApplicationJob
   include Notifications
 
-  self.queue_adapter = :good_job
   self.log_arguments = false
 
   # https://github.com/RoamingNoMaD/yabeda-activejob#custom-tags
@@ -13,8 +12,6 @@ class ParseReportJob < ApplicationJob
   end
 
   def perform(report_blob, message)
-    return if cancelled?
-
     @msg_value = message
     Rails.logger.info(
       "Parsing report for account #{@msg_value['org_id']}, " \
@@ -25,14 +22,6 @@ class ParseReportJob < ApplicationJob
     return unless @file
 
     parse_and_save_report
-  end
-
-  def cancelled?
-    GoodJob::Job.where(active_job_id: job_id).pick(:finished_at).present?
-  end
-
-  def self.cancel!(active_job_id)
-    GoodJob::Job.where(active_job_id: active_job_id).update_all(finished_at: Time.current)
   end
 
   private
