@@ -34,7 +34,7 @@ Before running the project, these services must be running and acessible:
 
 * Kafka — message broker (default port 29092)
   - set by `SETTINGS__KAFKA__BROKERS` environment variable
-* Redis — Job queue and cache
+* Redis — cache
 * PostgreSQL compatible database
   - `DATABASE_SERVICE_NAME=postgres`
   - conrolled by environment variables `POSTGRES_SERVICE_HOST`,
