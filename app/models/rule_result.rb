@@ -23,7 +23,10 @@ class RuleResult < ApplicationRecord
   scope :passed, -> { where(result: PASSED) }
   scope :failed, -> { where(result: FAILED) }
 
-  # Eliminates redundant joins to v2_test_results table
+  scope :with_count_data, lambda {
+    joins(build_rule_join, test_result: :system)
+  }
+
   scope :with_serializer_data, lambda {
     joins(build_rule_join)
       .joins(test_result: [:system, { tailoring: { profile: :security_guide } }])
@@ -65,7 +68,7 @@ class RuleResult < ApplicationRecord
       when :rule
         Rule.arel_table.alias('rule')
       when :system
-        Arel::Table.new(:hosts, as: 'system')
+        System.arel_table.alias('system')
       when :profile
         Profile.arel_table
       when :security_guide

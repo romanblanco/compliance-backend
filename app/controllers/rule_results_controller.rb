@@ -26,4 +26,9 @@ class RuleResultsController < ApplicationController
     scope = join_parents(pundit_scope, permitted_params[:parents])
     scope.with_serializer_data
   end
+
+  def count_scope
+    join_parents(pundit_scope, permitted_params[:parents])
+      .with_count_data
+  end
 end

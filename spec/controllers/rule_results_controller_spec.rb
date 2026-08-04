@@ -93,7 +93,6 @@ describe RuleResultsController do
         %w[test_result tailoring profile security_guide].each do |association|
           expect(query).to include(association)
         end
-        # Verify the optimized query includes the required rule table with proper alias
         expect(query).to include('"rule"')
 
         join_clauses = query.scan(/JOIN "test_results"/i).count
