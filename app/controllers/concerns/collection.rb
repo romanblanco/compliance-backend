@@ -65,6 +65,18 @@ module Collection
     def filter_by_tags(data)
       return data unless TagFiltering.tags_supported?(resource) && permitted_params[:tags]&.any?
 
+      ActiveModel::Type::Boolean.new.cast(Settings.iod_mode) ? filter_by_tags_hbi(data) : filter_by_tags_jsonb(data)
+    end
+
+    def filter_by_tags_hbi(data)
+      host_ids = Insights::Api::Common::HostInventory.new(
+        b64_identity: raw_identity_header
+      ).host_ids_by_tags(permitted_params[:tags])
+      column = resource == System ? :id : :system_id
+      data.where(column => host_ids)
+    end
+
+    def filter_by_tags_jsonb(data)
       apply_grouped_tag_filters(data, parse_tags(permitted_params[:tags]))
     end
 

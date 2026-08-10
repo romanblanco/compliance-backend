@@ -19,6 +19,12 @@ module Insights
           get
         end
 
+        def host_ids_by_tags(tags)
+          query = Faraday::FlatParamsEncoder.encode(tags: Array(tags), per_page: 100)
+          response = get("?#{query}")
+          response.dig('results')&.map { |h| h['id'] } || []
+        end
+
         private
 
         def get(path = '', params: {}, headers: { 'X-RH-IDENTITY': @b64_identity })
