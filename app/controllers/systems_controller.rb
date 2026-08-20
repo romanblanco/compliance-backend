@@ -52,7 +52,7 @@ class SystemsController < ApplicationController
     render json: authorize(fetch_collection(base_scope)).os_versions, status: :ok
   end
   permission_for_action :os_versions, Rbac::SYSTEM_READ
-  permitted_params_for_action :os_versions, { filter: ParamType.string }
+  permitted_params_for_action :os_versions, { filter: ParamType.string, tags: TAGS_TYPE }
 
   private
 
@@ -61,7 +61,10 @@ class SystemsController < ApplicationController
   end
 
   def system
-    @system ||= authorize(expand_resource.find(permitted_params[:id]))
+    # Honor the IoP host-scope tag on single-system reads: a system outside the
+    # user's tag scope must 404 just as it is excluded from the collection.
+    # No-op when no `tags` param is present (e.g. hosted/cloud requests).
+    @system ||= authorize(filter_by_tags(expand_resource).find(permitted_params[:id]))
   end
 
   def new_policy_system
@@ -87,8 +90,9 @@ class SystemsController < ApplicationController
   def assignable_systems
     return candidate_systems if SupportedSsg.minor_agnostic?(policy.os_major_version)
 
-    supported_minors = policy.os_minor_versions
-    candidate_systems.select { |system| supported_minors.include?(system.os_minor_version) }
+    # Hosted content ships per-minor datastreams, so keep only the minors the policy supports.
+    # Filtered in SQL (not Ruby) to avoid loading every candidate on bulk assignments.
+    candidate_systems.os_minor_versions(policy.os_minor_versions)
   end
 
   # Systems eligible for assignment before the minor rule is applied: the submitted `ids`, matching

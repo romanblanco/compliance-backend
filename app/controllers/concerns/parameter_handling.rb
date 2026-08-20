@@ -24,6 +24,7 @@ module ParameterHandling
 
   ParamType = ActionController::Parameters # shorthand
   ID_TYPE = ParamType.integer | ParamType.string
+  TAGS_TYPE = ParamType.array(ParamType.string) | ParamType.string
   ParamType.action_on_unpermitted_parameters = :raise # fail on unpermitted params
 
   DEFAULT_PERMITTED = StrongerParameters::ControllerSupport::PermittedParameters::DEFAULT_PERMITTED.merge(
@@ -51,12 +52,16 @@ module ParameterHandling
       limit: ParamType.integer & ParamType.gt(0) & ParamType.lte(100),
       offset: ParamType.integer & ParamType.gte(0),
       sort_by: ParamType.array(ParamType.string) | ParamType.string,
-      tags: ParamType.array(ParamType.string) | ParamType.string,
+      tags: TAGS_TYPE,
       filter: ParamType.string,
       ids_only: ParamType.boolean
     }
 
-    permitted_params_for_action :show, id: ParamType.string
+    # IoP forwards the RBAC host-scope tag (`sat_iam/scope`) on member view
+    # requests too, not just collections, so `show` must accept it. Taggable
+    # resources additionally honor it for host-visibility scoping (see
+    # SystemsController#system).
+    permitted_params_for_action :show, { id: ParamType.string, tags: TAGS_TYPE }
 
     # Use the params[:parents] configured by the route to construct a permit
     # hash containing each ID passed from the parents of a nested resource.

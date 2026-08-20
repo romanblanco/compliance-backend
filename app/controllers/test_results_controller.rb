@@ -18,14 +18,14 @@ class TestResultsController < ApplicationController
     render json: authorize(fetch_collection(base_scope)).os_versions, status: :ok
   end
   permission_for_action :os_versions, Rbac::SYSTEM_READ
-  permitted_params_for_action :os_versions, { filter: ParamType.string }
+  permitted_params_for_action :os_versions, { filter: ParamType.string, tags: TAGS_TYPE }
 
   def security_guide_versions
     render json: test_results.security_guide_versions, status: :ok
   end
   permission_for_action :security_guide_versions, Rbac::REPORT_READ
   kessel_permission_for_action :security_guide_versions, KesselRbac::REPORT_VIEW
-  permitted_params_for_action :security_guide_versions, { filter: ParamType.string }
+  permitted_params_for_action :security_guide_versions, { filter: ParamType.string, tags: TAGS_TYPE }
 
   private
 

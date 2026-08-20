@@ -69,6 +69,30 @@ describe SystemsController do
       let(:extra_params) { { id: item.id } }
 
       it_behaves_like 'individual'
+
+      # IoP forwards the RBAC host-scope tag on single-system reads too, so show
+      # must both accept the tag and scope the lookup by it (see
+      # SystemsController#system and ParameterHandling).
+      context 'with a host-scope tag (IoP)' do
+        let(:scope_tag) { 'sat_iam/scope=U:"admin"O:"Org"L:"*"' }
+
+        before do
+          item.update(tags: [{ namespace: 'sat_iam', key: 'scope', value: 'U:"admin"O:"Org"L:"*"' }])
+        end
+
+        it 'returns the system when the tag matches its scope' do
+          get :show, params: { id: item.id, tags: [scope_tag] }
+
+          expect(response).to have_http_status :ok
+          expect(response.parsed_body.dig('data', 'id')).to eq(item.id)
+        end
+
+        it 'returns not_found when the tag is outside the system scope' do
+          get :show, params: { id: item.id, tags: ['sat_iam/scope=U:"intruder"O:"Org"L:"*"'] }
+
+          expect(response).to have_http_status :not_found
+        end
+      end
     end
   end
 

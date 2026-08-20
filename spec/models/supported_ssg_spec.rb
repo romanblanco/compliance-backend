@@ -41,55 +41,123 @@ RSpec.describe SupportedSsg do
     end
   end
 
+  # Hosted content ships a distinct datastream per minor (e.g. RHEL-9.0 and RHEL-9.4), so major 9
+  # is NOT minor-agnostic. Major 8 ships only RHEL-8.0 here, so it acts as the upstream/IoP case.
+  let(:supported) do
+    [
+      described_class.new(os_major_version: '9', os_minor_version: '0', version: '0.1.73'),
+      described_class.new(os_major_version: '9', os_minor_version: '4', version: '0.1.81'),
+      described_class.new(os_major_version: '8', os_minor_version: '0', version: '0.1.72')
+    ]
+  end
+
+  before { allow(described_class).to receive(:all).and_return(supported) }
+
+  describe '.minor_agnostic?' do
+    it 'is false for a major shipping per-minor datastreams (hosted)' do
+      expect(described_class.minor_agnostic?(9)).to be(false)
+    end
+
+    it 'is true for a major shipping only a minor-0 datastream (upstream/IoP)' do
+      expect(described_class.minor_agnostic?(8)).to be(true)
+    end
+
+    it 'is false for an unknown major version' do
+      expect(described_class.minor_agnostic?(10)).to be(false)
+    end
+  end
+
   describe '.resolve_minor' do
-    let(:supported) do
-      [
-        described_class.new(os_major_version: '9', os_minor_version: '0', version: '0.1.73'),
-        described_class.new(os_major_version: '9', os_minor_version: '4', version: '0.1.81'),
-        described_class.new(os_major_version: '8', os_minor_version: '0', version: '0.1.72')
-      ]
+    context 'with per-minor (hosted) content' do
+      it 'keeps the requested minor when the exact SSG entry exists' do
+        expect(described_class.resolve_minor(9, 4)).to eq(4)
+      end
+
+      it 'keeps the requested minor even when no SSG entry ships for it' do
+        expect(described_class.resolve_minor(9, 3)).to eq(3)
+      end
+
+      it 'coerces string arguments and returns an integer' do
+        expect(described_class.resolve_minor('9', '4')).to eq(4)
+      end
+
+      it 'keeps the requested minor for an unknown major version' do
+        expect(described_class.resolve_minor(10, 1)).to eq(1)
+      end
     end
 
-    before { allow(described_class).to receive(:all).and_return(supported) }
-
-    it 'returns the exact minor when a matching SSG entry exists' do
-      expect(described_class.resolve_minor(9, 4)).to eq(4)
-    end
-
-    it 'falls back to minor 0 when no matching SSG entry exists' do
-      expect(described_class.resolve_minor(9, 3)).to eq(0)
-    end
-
-    it 'coerces string arguments and returns an integer' do
-      expect(described_class.resolve_minor('9', '4')).to eq(4)
-    end
-
-    it 'falls back to 0 for an entirely unknown major version' do
-      expect(described_class.resolve_minor(10, 1)).to eq(0)
+    context 'with minor-agnostic (upstream/IoP) content' do
+      it 'collapses every minor onto minor 0' do
+        expect(described_class.resolve_minor(8, 5)).to eq(0)
+      end
     end
   end
 
   describe '.for_os' do
+    context 'with per-minor (hosted) content' do
+      it 'returns the exact entries when a matching minor exists' do
+        expect(described_class.for_os(9, 4).map(&:os_minor_version)).to eq(['4'])
+      end
+
+      it 'returns nothing when no exact minor is shipped' do
+        expect(described_class.for_os(9, 3)).to be_empty
+      end
+
+      it 'returns an empty array when the major version is unknown' do
+        expect(described_class.for_os(10, 1)).to be_empty
+      end
+    end
+
+    context 'with minor-agnostic (upstream/IoP) content' do
+      it 'falls back to the minor-0 datastream for any minor' do
+        expect(described_class.for_os(8, 5).map(&:os_minor_version)).to eq(['0'])
+      end
+    end
+  end
+
+  # OS minor upgrades/downgrades and two-digit minors (e.g. 8.10) are the tricky cases: minors must
+  # be compared as integers, never as strings, or 8.10 would sort/behave like 8.1.
+  describe 'minor upgrades, downgrades and two-digit minors' do
     let(:supported) do
       [
-        described_class.new(os_major_version: '9', os_minor_version: '0', version: '0.1.73'),
-        described_class.new(os_major_version: '9', os_minor_version: '4', version: '0.1.81'),
-        described_class.new(os_major_version: '8', os_minor_version: '0', version: '0.1.72')
+        # Hosted: RHEL 8 and 9 ship a datastream per minor, including two-digit 8.10.
+        described_class.new(os_major_version: '8', os_minor_version: '0', version: '0.1.72'),
+        described_class.new(os_major_version: '8', os_minor_version: '1', version: '0.1.73'),
+        described_class.new(os_major_version: '8', os_minor_version: '10', version: '0.1.74'),
+        described_class.new(os_major_version: '9', os_minor_version: '0', version: '0.1.72'),
+        described_class.new(os_major_version: '9', os_minor_version: '1', version: '0.1.73'),
+        described_class.new(os_major_version: '9', os_minor_version: '5', version: '0.1.74'),
+        # Upstream/IoP: RHEL 7 ships only the minor-0 wildcard datastream.
+        described_class.new(os_major_version: '7', os_minor_version: '0', version: '0.1.70')
       ]
     end
 
-    before { allow(described_class).to receive(:all).and_return(supported) }
-
-    it 'returns the exact entries when a matching minor exists' do
-      expect(described_class.for_os(9, 4).map(&:os_minor_version)).to eq(['4'])
+    it 'treats a two-digit minor as an integer, not a string prefix' do
+      expect(described_class.resolve_minor(8, 10)).to eq(10)
+      expect(described_class.resolve_minor(8, 1)).to eq(1)
+      expect(described_class.for_os(8, 10).map(&:os_minor_version)).to eq(['10'])
     end
 
-    it 'falls back to the minor 0 entry when no exact minor exists' do
-      expect(described_class.for_os(9, 3).map(&:os_minor_version)).to eq(['0'])
+    it 'resolves each minor to itself across an upgrade 9.1 -> 9.5 (hosted)' do
+      expect(described_class.resolve_minor(9, 1)).to eq(1)
+      expect(described_class.resolve_minor(9, 5)).to eq(5)
     end
 
-    it 'returns an empty array when the major version is unknown' do
-      expect(described_class.for_os(10, 1)).to be_empty
+    it 'resolves each minor to itself across a downgrade 8.10 -> 8.1 (hosted)' do
+      expect(described_class.resolve_minor(8, 10)).to eq(10)
+      expect(described_class.resolve_minor(8, 1)).to eq(1)
+    end
+
+    it 'keeps an unshipped in-between minor as itself so the lookup 404s (hosted)' do
+      expect(described_class.resolve_minor(9, 3)).to eq(3)
+      expect(described_class.for_os(9, 3)).to be_empty
+    end
+
+    it 'collapses every minor (single and two-digit) onto 0 for minor-agnostic content' do
+      expect(described_class.minor_agnostic?(7)).to be(true)
+      expect(described_class.resolve_minor(7, 1)).to eq(0)
+      expect(described_class.resolve_minor(7, 10)).to eq(0)
+      expect(described_class.for_os(7, 10).map(&:os_minor_version)).to eq(['0'])
     end
   end
 end

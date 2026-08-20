@@ -141,4 +141,65 @@ RSpec.describe XccdfReportParser do
       expect(parser).to have_received(:save_all_test_result_info)
     end
   end
+
+  # A system can be re-scanned after an in-place OS minor upgrade (e.g. 8.1 -> 8.5). The uploaded
+  # report is ingested against the system's *current* minor, while the policy tailoring was created
+  # at assignment time. This drives the real resolver through the ingestion entry point:
+  #   * hosted (per-minor) content ships no tailoring for the new minor -> OSVersionMismatch
+  #   * minor-agnostic (upstream/IoP) content collapses every minor onto the single .0 tailoring,
+  #     so the re-scan keeps resolving and ingestion proceeds.
+  describe '#check_for_missing_tailored_profile after an OS minor upgrade' do
+    # xccdf_report.xml is a RHEL-8 report for profile xccdf_org.ssgproject.content_profile_standard.
+    let(:os_major_version) { 8 }
+    let(:assignment_minor) { 1 }
+    let(:upgraded_minor) { 5 }
+
+    def ssg(major, minor)
+      SupportedSsg.new(os_major_version: major.to_s, os_minor_version: minor.to_s, version: '0.1.40')
+    end
+
+    let(:profile) do
+      create(:profile, ref_id_suffix: 'standard', os_major_version: os_major_version, supports_minors: supported_minors)
+    end
+    let(:policy) { create(:policy, account: user.account, os_major_version: os_major_version, profile: profile) }
+
+    # Assigning the system creates the policy tailoring at the system's resolved minor; the system
+    # then reports the upgraded minor, mimicking an in-place upgrade after policy assignment.
+    let(:system) do
+      create(:system, account: user.account, policy_id: policy.id,
+                      os_major_version: os_major_version, os_minor_version: assignment_minor).tap do |sys|
+        upgraded = sys.system_profile.deep_dup
+        upgraded['operating_system']['minor'] = upgraded_minor
+        upgraded['os_release'] = "#{os_major_version}.#{upgraded_minor}"
+        sys.update!(system_profile: upgraded)
+        sys.reload
+      end
+    end
+
+    context 'with per-minor (hosted) content that ships no tailoring for the new minor' do
+      let(:supported_minors) { [assignment_minor] }
+
+      before do
+        allow(SupportedSsg).to receive(:all)
+          .and_return([ssg(os_major_version, 0), ssg(os_major_version, assignment_minor)])
+      end
+
+      it 'raises OSVersionMismatch reporting the resolved upgraded minor' do
+        expect { parser.check_for_missing_tailored_profile }
+          .to raise_error(described_class::OSVersionMismatch, /resolved to #{upgraded_minor}/)
+      end
+    end
+
+    context 'with minor-agnostic (upstream/IoP) content that ships only the .0 datastream' do
+      let(:supported_minors) { [0] }
+
+      before { allow(SupportedSsg).to receive(:all).and_return([ssg(os_major_version, 0)]) }
+
+      it 'keeps resolving the re-scan to the single .0 tailoring' do
+        expect { parser.check_for_missing_tailored_profile }.not_to raise_error
+        expect(parser.tailored_profile)
+          .to eq(Tailoring.find_by!(policy: policy, os_minor_version: 0).profile)
+      end
+    end
+  end
 end
