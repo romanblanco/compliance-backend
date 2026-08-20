@@ -5,10 +5,10 @@ module Xccdf
   module Tailorings
     # rubocop:disable Rails/FindByOrAssignmentMemoization
     def tailoring
-      @tailoring ||= ::Tailoring.find_by(
-        policy: @policy,
-        os_minor_version: @system.os_minor_version.to_i
-      )
+      @tailoring ||= begin
+        minor = ::SupportedSsg.resolve_minor(@system.os_major_version, @system.os_minor_version)
+        ::Tailoring.find_by(policy: @policy, os_minor_version: minor)
+      end
     end
     # rubocop:enable Rails/FindByOrAssignmentMemoization
 
