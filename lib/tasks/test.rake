@@ -10,6 +10,12 @@ namespace :spec do
 end
 
 unless Rails.env.production?
-  require 'rubocop/rake_task'
-  RuboCop::RakeTask.new
+  begin
+    require 'rubocop/rake_task'
+    RuboCop::RakeTask.new
+  rescue LoadError
+    # rubocop is unavailable in deployment bundles (e.g. RAILS_ENV=foreman built
+    # with BUNDLE_WITHOUT="development test"). Skip defining the lint task so that
+    # rake db:migrate and other tasks still load.
+  end
 end
