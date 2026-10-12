@@ -65,6 +65,18 @@ class TailoringsController < ApplicationController
 
   private
 
+  def expand_resource
+    scope = super
+
+    scope.includes(
+      :rules,
+      profile: :rules,
+      policy: :profile,
+      rules: :rule_group,
+      security_guide: :value_definitions
+    )
+  end
+
   def tailorings
     @tailorings ||= authorize(resolve_collection)
   end

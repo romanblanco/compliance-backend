@@ -68,6 +68,18 @@ describe TailoringsController do
 
       it_behaves_like 'individual', :policy
       it_behaves_like 'indexable', :os_minor_version, :policy
+
+      describe 'N+1 query optimization' do
+        it 'preloads associations to prevent additional queries' do
+          get :show, params: extra_params.merge(parents: [:policy])
+
+          tailoring = controller.instance_variable_get(:@tailoring)
+
+          expect(tailoring.association(:rules)).to be_loaded
+          expect(tailoring.association(:policy)).to be_loaded
+          expect(tailoring.policy.association(:profile)).to be_loaded
+        end
+      end
     end
 
     describe 'GET rule_tree' do
