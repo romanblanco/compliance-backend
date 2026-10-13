@@ -22,6 +22,11 @@ class ParseReportJob < ApplicationJob
     return unless @file
 
     parse_and_save_report
+  ensure
+    file_size = @file&.bytesize || 0
+    Rails.logger.debug("ParseReportJob: cleanup refs (file=#{file_size}B, parser_existed=#{!@parser.nil?})")
+    @file = nil
+    @parser = nil
   end
 
   private

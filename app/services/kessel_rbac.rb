@@ -27,6 +27,12 @@ class KesselRbac
       @client ||= build_client
     end
 
+    def reset_client
+      @client&.close if @client.respond_to?(:close)
+      @client = nil
+      Rails.logger.debug('Kessel client closed and reset')
+    end
+
     include Kessel::Inventory::V1beta2
     include Kessel::RBAC::V2
 

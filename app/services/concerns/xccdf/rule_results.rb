@@ -8,7 +8,9 @@ module Xccdf
     end
 
     def rule_results
-      @rule_results ||= selected_op_rule_results.map do |op_rule_result|
+      count = selected_op_rule_results.size
+      Rails.logger.debug("XccdfRuleResults: materializing #{count} rule results (no cache)")
+      selected_op_rule_results.map do |op_rule_result|
         ::RuleResult.from_parser(
           op_rule_result,
           test_result_id: @test_result.id,

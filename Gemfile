@@ -117,7 +117,7 @@ group :development, :test do
   gem 'minitest-stub-const'
   gem 'mocha'
   gem 'pry-byebug'
-  gem 'pry-remote'
+  # gem 'pry-remote'  # TODO: needs readline dependency
   gem 'rspec-rails'
   gem 'rswag-specs'
   gem 'rubocop', require: false

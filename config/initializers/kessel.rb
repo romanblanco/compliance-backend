@@ -65,6 +65,9 @@ Rails.application.configure do
     end
 
     Rails.logger.info "Kessel configured: URL=#{Settings.kessel.url}, Auth=#{Settings.kessel.auth.enabled}"
+
+    # Register shutdown hook to cleanup Kessel client gRPC channel
+    at_exit { KesselRbac.reset_client }
   else
     Rails.logger.info 'Kessel is disabled, using RBAC v1'
   end
