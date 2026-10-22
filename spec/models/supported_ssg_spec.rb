@@ -66,6 +66,14 @@ RSpec.describe SupportedSsg do
     end
   end
 
+  describe '.by_os_major' do
+    it 'profiles supported SSG materialization' do
+      expect(MemoryDiagnostics).to receive(:measure).with('supported_ssg.by_os_major').and_call_original
+
+      described_class.by_os_major
+    end
+  end
+
   describe '.resolve_minor' do
     context 'with per-minor (hosted) content' do
       it 'keeps the requested minor when the exact SSG entry exists' do

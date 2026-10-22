@@ -15,6 +15,7 @@ class ApplicationController < ActionController::API
   include ::ErrorHandling
 
   before_action :set_csp_hsts
+  around_action :memory_debug_request
 
   class << self
     def permission_for_action(action, permission)
@@ -51,6 +52,15 @@ class ApplicationController < ActionController::API
   def set_csp_hsts
     response.set_header('Content-Security-Policy', "default-src 'none'")
     response.set_header('Strict-Transport-Security', "max-age=#{1.year}")
+  end
+
+  def memory_debug_request(&action)
+    MemoryDiagnostics.measure(
+      'request',
+      controller: self.class.name,
+      action: action_name,
+      method: request.request_method
+    ) { action.call }
   end
 
   def rbac_allowed?

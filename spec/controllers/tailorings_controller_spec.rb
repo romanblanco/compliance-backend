@@ -303,9 +303,14 @@ describe TailoringsController do
         end
 
         it 'returns tailoring file' do
+          allow(MemoryDiagnostics).to receive(:measure).and_call_original
+
           get :tailoring_file, params: extra_params.merge(parents: [:policy], format: format)
 
           expect(response).to have_http_status :ok
+          expect(MemoryDiagnostics).to have_received(:measure).with(
+            'tailoring_file_builder', format: format
+          )
           expect(response.headers['Content-Type']).to eq(Mime[format].to_s)
           expect(values).to match_array(item.value_overrides_by_ref_id)
           expect(selected_rules).not_to be_empty

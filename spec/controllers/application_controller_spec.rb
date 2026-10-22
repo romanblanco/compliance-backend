@@ -76,4 +76,18 @@ describe ApplicationController do
       subject.send(:audit_success, message)
     end
   end
+
+  describe 'memory diagnostics' do
+    it 'wraps requests with memory diagnostics' do
+      expect(MemoryDiagnostics).to receive(:measure).with(
+        'request',
+        controller: described_class.name,
+        action: 'index',
+        method: request.request_method
+      ).and_call_original
+
+      allow(subject).to receive(:action_name).and_return('index')
+      expect(subject.send(:memory_debug_request) { :ok }).to eq(:ok)
+    end
+  end
 end

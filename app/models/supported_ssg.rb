@@ -87,7 +87,9 @@ SupportedSsg = Struct.new(:id, :package, :version, :profiles,
     end
 
     def by_os_major
-      all.group_by(&:os_major_version)
+      MemoryDiagnostics.measure('supported_ssg.by_os_major') do
+        all.group_by(&:os_major_version)
+      end
     end
 
     def by_ssg_version(force = false)

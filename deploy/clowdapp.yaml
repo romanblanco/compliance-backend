@@ -381,6 +381,10 @@ objects:
           value: "${PATH_PREFIX}"
         - name: APP_NAME
           value: "${APP_NAME}"
+        - name: MEMORY_DEBUG
+          value: "${MEMORY_DEBUG}"
+        - name: MEMORY_DEBUG_SAMPLE_RATE
+          value: "${MEMORY_DEBUG_SAMPLE_RATE}"
         - name: RAILS_LOGLEVEL
           value: "${RAILS_LOGLEVEL}"
         - name: RAILS_LOG_TO_STDOUT
@@ -857,6 +861,10 @@ parameters:
   value: /api
 - name: RAILS_LOGLEVEL
   value: 'info'
+- name: MEMORY_DEBUG
+  value: 'false'
+- name: MEMORY_DEBUG_SAMPLE_RATE
+  value: '1.0'
 - name: RAILS_LOG_TO_STDOUT
   value: "true"
 - name: APP_NAME

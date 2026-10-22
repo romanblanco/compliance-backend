@@ -78,13 +78,15 @@ class TailoringsController < ApplicationController
   end
 
   def file_builder(format)
-    TailoringFile.new(
-      profile: tailoring,
-      rules: tailoring.rules_added + tailoring.rules_removed,
-      rule_group_ref_ids: tailoring.rule_group_ref_ids,
-      set_values: tailoring.value_overrides_by_ref_id,
-      format: format
-    )
+    MemoryDiagnostics.measure('tailoring_file_builder', format: format) do
+      TailoringFile.new(
+        profile: tailoring,
+        rules: tailoring.rules_added + tailoring.rules_removed,
+        rule_group_ref_ids: tailoring.rule_group_ref_ids,
+        set_values: tailoring.value_overrides_by_ref_id,
+        format: format
+      )
+    end
   end
 
   def resource
